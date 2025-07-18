@@ -350,7 +350,7 @@ export default function Dashboard() {
                                     Your self-hosted surveillance hub. To get started, add your first camera feed.
                                 </p>
                                 <Button asChild className="mt-6">
-                                    <Link href="/settings">
+                                    <Link href="/settings/cameras">
                                         <Settings className="mr-2 h-4 w-4" /> Add a Camera
                                     </Link>
                                 </Button>
