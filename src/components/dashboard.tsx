@@ -1,18 +1,20 @@
 "use client";
 
-import { useState } from 'react';
-import { Aperture, History, LayoutGrid, ScanSearch, Settings, Wand2 } from 'lucide-react';
+import { useState, useTransition } from 'react';
+import Link from 'next/link';
+import { Aperture, History, LayoutGrid, ScanSearch, Settings, Wand2, Loader2, ListVideo } from 'lucide-react';
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { mockCameras, mockLayouts } from '@/lib/mock-data';
-import type { Camera, Layout } from '@/lib/types';
+import type { Camera, Layout, Recording } from '@/lib/types';
 import { CameraFeed, FullscreenView } from './camera-feed';
 import { LayoutManager } from './layout-manager';
 import { ObjectDetectionPanel } from './object-detection-panel';
 import { useToast } from '@/hooks/use-toast';
+import { summarizeRecordingAction } from '@/app/actions';
 
 export default function Dashboard() {
   const [cameras, setCameras] = useState<Camera[]>(mockCameras);
@@ -22,6 +24,7 @@ export default function Dashboard() {
   const [isLayoutManagerOpen, setIsLayoutManagerOpen] = useState(false);
   const [isObjectDetectorOpen, setIsObjectDetectorOpen] = useState(false);
   const [detectionData, setDetectionData] = useState<{camera: Camera, frame: string | null} | null>(null);
+  const [isRecordingPending, startRecordingTransition] = useTransition();
   const { toast } = useToast();
 
   const handleLayoutChange = (layoutId: string) => {
@@ -47,6 +50,51 @@ export default function Dashboard() {
     handleOpenDetector(cameras[0], null);
   }
 
+  const handleRecord = (camera: Camera, videoUri: string) => {
+    toast({
+      title: 'Processing Recording...',
+      description: (
+        <div className="flex items-center">
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          <span>AI is summarizing your clip from {camera.name}.</span>
+        </div>
+      ),
+      duration: 60000, // Long duration, will be dismissed programmatically
+    });
+
+    startRecordingTransition(async () => {
+      const response = await summarizeRecordingAction({
+        videoDataUri: videoUri,
+        cameraName: camera.name,
+      });
+
+      if (response.success && response.data) {
+         const newRecording: Recording = {
+           id: `rec-${Date.now()}`,
+           timestamp: new Date().toISOString(),
+           videoDataUri: videoUri,
+           cameraName: camera.name,
+           ...response.data
+         };
+         
+         const existingRecordings: Recording[] = JSON.parse(localStorage.getItem('recordings') || '[]');
+         localStorage.setItem('recordings', JSON.stringify([...existingRecordings, newRecording]));
+
+         toast({
+           title: 'Recording Saved!',
+           description: `Clip from ${camera.name} is now available in Playback.`,
+         });
+
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Summarization Failed',
+          description: response.error,
+        });
+      }
+    });
+  }
+
   const gridStyle = {
     gridTemplateColumns: `repeat(${activeLayout.grid.cols}, minmax(0, 1fr))`,
     gridTemplateRows: `repeat(${activeLayout.grid.rows}, minmax(0, auto))`,
@@ -69,10 +117,20 @@ export default function Dashboard() {
           <SidebarContent>
             <SidebarMenu>
                 <SidebarMenuItem>
+                  <Link href="/" className="w-full">
                     <SidebarMenuButton tooltip="Live View" isActive={true}>
                         <LayoutGrid />
                         <span className="group-data-[collapsible=icon]:hidden">Live View</span>
                     </SidebarMenuButton>
+                  </Link>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <Link href="/playback" className="w-full">
+                    <SidebarMenuButton tooltip="Playback">
+                       <ListVideo />
+                       <span className="group-data-[collapsible=icon]:hidden">Playback</span>
+                    </SidebarMenuButton>
+                  </Link>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                     <SidebarMenuButton tooltip="Object Detection" onClick={handleOpenDetectorForFirstCamera}>
@@ -132,6 +190,7 @@ export default function Dashboard() {
                         camera={camera} 
                         onFullscreen={setFullscreenCamera}
                         onDetect={handleOpenDetector}
+                        onRecord={handleRecord}
                       />
                     ) : (
                       <div className="h-full w-full flex items-center justify-center bg-muted/50 rounded-lg">

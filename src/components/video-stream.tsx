@@ -8,9 +8,15 @@ interface VideoStreamProps {
   thumbnailUrl: string;
 }
 
-export const VideoStream = forwardRef<{ captureFrame: () => string | null }, VideoStreamProps>(
+export const VideoStream = forwardRef<{ 
+  captureFrame: () => string | null;
+  startRecording: () => void;
+  stopRecording: () => Promise<string | null>;
+}, VideoStreamProps>(
   ({ streamUrl, thumbnailUrl }, ref) => {
     const videoRef = useRef<HTMLVideoElement>(null);
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+    const recordedChunksRef = useRef<Blob[]>([]);
     const [isError, setIsError] = useState(false);
 
     useImperativeHandle(ref, () => ({
@@ -27,22 +33,75 @@ export const VideoStream = forwardRef<{ captureFrame: () => string | null }, Vid
         }
         return null;
       },
+      startRecording: () => {
+        if (videoRef.current && videoRef.current.srcObject && !isError) {
+            recordedChunksRef.current = [];
+            const stream = videoRef.current.srcObject as MediaStream;
+            mediaRecorderRef.current = new MediaRecorder(stream, { mimeType: 'video/webm' });
+            mediaRecorderRef.current.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    recordedChunksRef.current.push(event.data);
+                }
+            };
+            mediaRecorderRef.current.start();
+        }
+      },
+      stopRecording: () => {
+        return new Promise((resolve) => {
+            if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+                mediaRecorderRef.current.onstop = () => {
+                    const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        resolve(reader.result as string);
+                    };
+                    reader.readAsDataURL(blob);
+                };
+                mediaRecorderRef.current.stop();
+            } else {
+                resolve(null);
+            }
+        });
+      }
     }));
-
-    // In a real application, you'd use a library like HLS.js or Shaka Player
-    // to handle streaming protocols (HLS, DASH) converted from an RTSP source
-    // by a media server. For this demo, we will simulate a video feed.
-    // We'll show a placeholder and log the intended stream URL.
     
     useEffect(() => {
         console.info(`Attempting to play stream: ${streamUrl}. A media server is required to convert RTSP for web playback.`);
-        if (videoRef.current) {
-          // This is a placeholder public video. For a real RTSP feed,
-          // you would need a media server to convert it to HLS/DASH.
-          const demoVideoUrl = 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
-          videoRef.current.src = demoVideoUrl;
-          videoRef.current.addEventListener('error', () => setIsError(true));
+        
+        async function setupVideoStream() {
+            if (videoRef.current) {
+                try {
+                    // Using a public video stream for demo purposes
+                    const demoVideoUrl = 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+                    
+                    const response = await fetch(demoVideoUrl);
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    const videoBlob = await response.blob();
+                    const videoObjectUrl = URL.createObjectURL(videoBlob);
+                    
+                    // To enable recording, we need a MediaStream.
+                    // We'll play the video in a hidden element and capture its stream.
+                    const sourceVideo = document.createElement('video');
+                    sourceVideo.src = videoObjectUrl;
+                    sourceVideo.crossOrigin = 'anonymous';
+                    sourceVideo.loop = true;
+                    sourceVideo.muted = true;
+                    await sourceVideo.play();
+                    
+                    const stream = (sourceVideo as any).captureStream();
+                    
+                    videoRef.current.srcObject = stream;
+                    videoRef.current.addEventListener('error', () => setIsError(true));
+
+                } catch (e) {
+                    console.error("Failed to setup video stream:", e);
+                    setIsError(true);
+                }
+            }
         }
+        
+        setupVideoStream();
+
     }, [streamUrl]);
 
     if (isError) {
@@ -71,7 +130,6 @@ export const VideoStream = forwardRef<{ captureFrame: () => string | null }, Vid
         autoPlay
         muted
         playsInline
-        loop // Looping for demo purposes
         poster={thumbnailUrl}
       />
     );

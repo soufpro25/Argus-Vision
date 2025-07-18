@@ -1,5 +1,10 @@
 import Dashboard from '@/components/dashboard';
+import { SidebarInset } from '@/components/ui/sidebar';
 
 export default function Home() {
-  return <Dashboard />;
+  return (
+    <SidebarInset>
+      <Dashboard />
+    </SidebarInset>
+  );
 }

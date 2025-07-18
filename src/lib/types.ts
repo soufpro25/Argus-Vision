@@ -21,3 +21,12 @@ export interface DetectedObject {
   confidence: number;
   box: [number, number, number, number]; // [x1, y1, x2, y2]
 }
+
+export interface Recording {
+    id: string;
+    timestamp: string;
+    cameraName: string;
+    title: string;
+    summary: string;
+    videoDataUri: string;
+}
