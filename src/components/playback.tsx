@@ -53,7 +53,7 @@ export default function Playback() {
                  <ScrollArea className="h-full pr-4">
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {recordings.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).map(rec => (
-                            <Card key={rec.id} className="overflow-hidden flex flex-col group bg-card hover:border-primary/50 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/20">
+                            <Card key={rec.id} className="overflow-hidden flex flex-col group bg-card hover:border-primary/50 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/10">
                                  <div className="relative aspect-video overflow-hidden">
                                     <video
                                         src={rec.videoDataUri}
@@ -62,7 +62,7 @@ export default function Playback() {
                                         preload="metadata"
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Button size="icon" className="h-14 w-14 rounded-full bg-primary/80 backdrop-blur-sm" onClick={() => handlePlayRecording(rec)}>
+                                        <Button size="icon" className="h-14 w-14 rounded-full bg-primary/80 backdrop-blur-sm hover:bg-primary" onClick={() => handlePlayRecording(rec)}>
                                             <PlayCircle className="h-8 w-8" />
                                         </Button>
                                     </div>

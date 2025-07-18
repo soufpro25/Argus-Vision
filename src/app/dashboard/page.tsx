@@ -233,7 +233,7 @@ export default function Dashboard() {
                 {activeLayout.grid.cameras.map((cameraId, index) => {
                     const camera = getCameraById(cameraId);
                     return (
-                    <div key={cameraId ? `${cameraId}-${index}`: index} className="bg-card rounded-lg overflow-hidden min-h-[200px] group">
+                    <div key={cameraId ? `${cameraId}-${index}`: index} className="bg-transparent rounded-lg overflow-hidden min-h-[200px] group">
                         {camera ? (
                         <CameraFeed 
                             camera={camera} 
