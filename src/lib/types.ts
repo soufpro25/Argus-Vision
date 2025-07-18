@@ -2,8 +2,8 @@ export interface Camera {
   id: string;
   name: string;
   description: string;
-  streamUrl?: string; // For real implementation
-  thumbnailUrl: string; // For placeholder
+  streamUrl: string; // For real implementation
+  thumbnailUrl: string; // For placeholder/fallback
 }
 
 export interface Layout {

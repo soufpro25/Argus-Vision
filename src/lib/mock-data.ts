@@ -1,12 +1,15 @@
 import type { Camera, Layout } from '@/lib/types';
 
+// Note: These are public, non-functional RTSP stream URLs for demonstration.
+// For a real application, you would replace these with your actual RTSP stream URLs.
+// The app does not include a backend to transcode these streams for web playback.
 export const mockCameras: Camera[] = [
-  { id: 'cam-01', name: 'Front Door', description: 'Covers the main entrance and porch area.', thumbnailUrl: 'https://placehold.co/800x600.png' },
-  { id: 'cam-02', name: 'Backyard', description: 'Monitors the entire backyard, including the patio and garden.', thumbnailUrl: 'https://placehold.co/800x600.png' },
-  { id: 'cam-03', name: 'Living Room', description: 'Inside view of the main living area.', thumbnailUrl: 'https://placehold.co/800x600.png' },
-  { id: 'cam-04', name: 'Garage', description: 'Covers the interior of the garage.', thumbnailUrl: 'https://placehold.co/800x600.png' },
-  { id: 'cam-05', name: 'Driveway', description: 'Overlooks the driveway and street.', thumbnailUrl: 'https://placehold.co/800x600.png' },
-  { id: 'cam-06', name: 'Kitchen', description: 'Monitors the kitchen and dining area.', thumbnailUrl: 'https://placehold.co/800x600.png' },
+  { id: 'cam-01', name: 'Front Door', description: 'Covers the main entrance and porch area.', streamUrl: 'rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov', thumbnailUrl: 'https://placehold.co/800x600.png' },
+  { id: 'cam-02', name: 'Backyard', description: 'Monitors the entire backyard, including the patio and garden.', streamUrl: 'rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov', thumbnailUrl: 'https://placehold.co/800x600.png' },
+  { id: 'cam-03', name: 'Living Room', description: 'Inside view of the main living area.', streamUrl: 'rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov', thumbnailUrl: 'https://placehold.co/800x600.png' },
+  { id: 'cam-04', name: 'Garage', description: 'Covers the interior of the garage.', streamUrl: 'rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov', thumbnailUrl: 'https://placehold.co/800x600.png' },
+  { id: 'cam-05', name: 'Driveway', description: 'Overlooks the driveway and street.', streamUrl: 'rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov', thumbnailUrl: 'https://placehold.co/800x600.png' },
+  { id: 'cam-06', name: 'Kitchen', description: 'Monitors the kitchen and dining area.', streamUrl: 'rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov', thumbnailUrl: 'https://placehold.co/800x600.png' },
 ];
 
 export const mockLayouts: Layout[] = [

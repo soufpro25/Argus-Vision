@@ -18,9 +18,10 @@ interface ObjectDetectionPanelProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   camera: Camera | null;
+  initialFrame: string | null;
 }
 
-export function ObjectDetectionPanel({ open, onOpenChange, camera }: ObjectDetectionPanelProps) {
+export function ObjectDetectionPanel({ open, onOpenChange, camera, initialFrame }: ObjectDetectionPanelProps) {
   const [criteria, setCriteria] = useState('any person or vehicle');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<SmartObjectDetectionOutput | null>(null);
@@ -29,12 +30,18 @@ export function ObjectDetectionPanel({ open, onOpenChange, camera }: ObjectDetec
   const { toast } = useToast();
   
   useEffect(() => {
-    if (camera?.thumbnailUrl) {
+    if (open) {
+      if (initialFrame) {
+        setImagePreview(initialFrame);
+      } else if (camera?.thumbnailUrl) {
         setImagePreview(camera.thumbnailUrl);
-        setResult(null);
-        setError(null);
+      } else {
+        setImagePreview(null);
+      }
+      setResult(null);
+      setError(null);
     }
-  }, [camera, open]);
+  }, [camera, initialFrame, open]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

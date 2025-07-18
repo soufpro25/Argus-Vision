@@ -21,7 +21,7 @@ export default function Dashboard() {
   const [fullscreenCamera, setFullscreenCamera] = useState<Camera | null>(null);
   const [isLayoutManagerOpen, setIsLayoutManagerOpen] = useState(false);
   const [isObjectDetectorOpen, setIsObjectDetectorOpen] = useState(false);
-  const [cameraForDetection, setCameraForDetection] = useState<Camera | null>(null);
+  const [detectionData, setDetectionData] = useState<{camera: Camera, frame: string | null} | null>(null);
   const { toast } = useToast();
 
   const handleLayoutChange = (layoutId: string) => {
@@ -37,9 +37,14 @@ export default function Dashboard() {
     setIsLayoutManagerOpen(false);
   };
   
-  const handleOpenDetector = (camera: Camera) => {
-      setCameraForDetection(camera);
+  const handleOpenDetector = (camera: Camera, frame: string | null) => {
+      setDetectionData({ camera, frame });
       setIsObjectDetectorOpen(true);
+  }
+
+  const handleOpenDetectorForFirstCamera = () => {
+    // This is a fallback for the sidebar button. It won't have a frame.
+    handleOpenDetector(cameras[0], null);
   }
 
   const gridStyle = {
@@ -70,7 +75,7 @@ export default function Dashboard() {
                     </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                    <SidebarMenuButton tooltip="Object Detection" onClick={() => handleOpenDetector(cameras[0])}>
+                    <SidebarMenuButton tooltip="Object Detection" onClick={handleOpenDetectorForFirstCamera}>
                        <ScanSearch />
                        <span className="group-data-[collapsible=icon]:hidden">Object Detection</span>
                     </SidebarMenuButton>
@@ -143,7 +148,12 @@ export default function Dashboard() {
       
       {fullscreenCamera && <FullscreenView camera={fullscreenCamera} onClose={() => setFullscreenCamera(null)} />}
       <LayoutManager open={isLayoutManagerOpen} onOpenChange={setIsLayoutManagerOpen} cameras={cameras} onLayoutSave={handleSaveLayout} />
-      <ObjectDetectionPanel open={isObjectDetectorOpen} onOpenChange={setIsObjectDetectorOpen} camera={cameraForDetection} />
+      <ObjectDetectionPanel 
+        open={isObjectDetectorOpen} 
+        onOpenChange={setIsObjectDetectorOpen} 
+        camera={detectionData?.camera ?? null} 
+        initialFrame={detectionData?.frame ?? null}
+      />
     </SidebarProvider>
   );
 }
