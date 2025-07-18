@@ -120,8 +120,8 @@ export default function SettingsPage() {
                         </header>
 
                         <div className="grid md:grid-cols-2 gap-6 mt-8">
-                            <Link href="/settings/cameras">
-                                <Card className="hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 transition-all bg-card/50">
+                            <Link href="/settings/cameras" className="block">
+                                <Card className="hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 transition-all bg-card/50 h-full">
                                     <CardHeader className="flex flex-row items-center justify-between">
                                         <div className='space-y-1.5'>
                                             <CardTitle>Camera Management</CardTitle>
@@ -136,8 +136,8 @@ export default function SettingsPage() {
                                     </CardContent>
                                 </Card>
                             </Link>
-                            <Link href="/settings/users">
-                                <Card className="hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 transition-all bg-card/50">
+                            <Link href="/settings/users" className="block">
+                                <Card className="hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 transition-all bg-card/50 h-full">
                                     <CardHeader className="flex flex-row items-center justify-between">
                                         <div className='space-y-1.5'>
                                             <CardTitle>User Management</CardTitle>

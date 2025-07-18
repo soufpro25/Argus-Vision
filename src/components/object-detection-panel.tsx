@@ -39,7 +39,8 @@ export function ObjectDetectionPanel({ open, onOpenChange, camera, initialFrame 
       } else if (camera?.thumbnailUrl) {
         setImagePreview(camera.thumbnailUrl);
       } else {
-        setImagePreview(null);
+        // Fallback to a generic placeholder if no image is available
+        setImagePreview('https://placehold.co/800x600.png');
       }
       setResult(null);
       setError(null);

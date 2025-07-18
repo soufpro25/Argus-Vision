@@ -6,7 +6,6 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/button';
 import { PlayCircle, ListVideo, Film } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useToast } from '@/hooks/use-toast';
 import type { Recording } from '@/lib/types';
 import { ScrollArea } from './ui/scroll-area';
 import { getRecordings } from '@/lib/storage';
@@ -20,7 +19,6 @@ export default function Playback({ isDashboard = false, recordings: propRecordin
     const [recordings, setRecordings] = useState<Recording[]>(propRecordings || []);
     const [selectedRecording, setSelectedRecording] = useState<Recording | null>(null);
     const [isPlayerOpen, setIsPlayerOpen] = useState(false);
-    const { toast } = useToast();
 
     useEffect(() => {
         if (isDashboard) {
@@ -52,7 +50,7 @@ export default function Playback({ isDashboard = false, recordings: propRecordin
             )}
             
             <div className="flex-grow overflow-hidden">
-            {recordings.length > 0 ? (
+            {recordings && recordings.length > 0 ? (
                  <ScrollArea className="h-full pr-4">
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {recordings.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).map(rec => (

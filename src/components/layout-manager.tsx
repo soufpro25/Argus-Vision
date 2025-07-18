@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useTransition, useMemo } from 'react';
+import { useState, useTransition, useMemo, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,7 @@ import { Loader2, Wand2, AlertCircle } from 'lucide-react';
 import type { Camera, Layout } from '@/lib/types';
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { ScrollArea } from './ui/scroll-area';
 
 interface LayoutManagerProps {
   open: boolean;
@@ -23,12 +24,21 @@ interface LayoutManagerProps {
 
 export function LayoutManager({ open, onOpenChange, cameras, onLayoutSave }: LayoutManagerProps) {
   const [isPending, startTransition] = useTransition();
-  const [cameraDescriptions, setCameraDescriptions] = useState<Camera[]>(cameras);
+  const [cameraDescriptions, setCameraDescriptions] = useState<Camera[]>([]);
   const [suggestedLayout, setSuggestedLayout] = useState<{ layout: string[], reasoning: string } | null>(null);
   const [layoutName, setLayoutName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
+
+  useEffect(() => {
+    if (open) {
+      setCameraDescriptions(cameras);
+      setSuggestedLayout(null);
+      setLayoutName('');
+      setError(null);
+    }
+  }, [open, cameras]);
   
   const groupedCameras = useMemo(() => {
     return cameraDescriptions.reduce((acc, camera) => {
@@ -54,7 +64,7 @@ export function LayoutManager({ open, onOpenChange, cameras, onLayoutSave }: Lay
       const cameraDetails = cameraDescriptions.map(c => ({
           cameraId: c.id,
           locationDescription: c.description,
-          server: c.server || 'Unassigned',
+          server: c.server,
       }));
 
       const response = await suggestLayoutAction(cameraDetails);
@@ -110,28 +120,30 @@ export function LayoutManager({ open, onOpenChange, cameras, onLayoutSave }: Lay
             Describe your camera locations and let AI suggest an optimal grid layout.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-6 py-4 max-h-[60vh] overflow-y-auto pr-4">
-            {Object.entries(groupedCameras).map(([server, cams]) => (
-                <Card key={server}>
-                    <CardHeader>
-                        <CardTitle>{server}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        {cams.map(cam => (
-                             <div key={cam.id} className="space-y-2">
-                                <Label htmlFor={`desc-${cam.id}`}>{cam.name}</Label>
-                                <Textarea
-                                    id={`desc-${cam.id}`}
-                                    value={cam.description}
-                                    onChange={e => handleDescriptionChange(cam.id, e.target.value)}
-                                    placeholder="e.g., 'Covers the main entrance and porch'"
-                                />
-                            </div>
-                        ))}
-                    </CardContent>
-                </Card>
-            ))}
-        </div>
+        <ScrollArea className="max-h-[50vh] pr-4 -mr-4">
+            <div className="grid gap-6 py-4">
+                {Object.entries(groupedCameras).map(([server, cams]) => (
+                    <Card key={server}>
+                        <CardHeader>
+                            <CardTitle>{server}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {cams.map(cam => (
+                                <div key={cam.id} className="space-y-2">
+                                    <Label htmlFor={`desc-${cam.id}`}>{cam.name}</Label>
+                                    <Textarea
+                                        id={`desc-${cam.id}`}
+                                        value={cam.description}
+                                        onChange={e => handleDescriptionChange(cam.id, e.target.value)}
+                                        placeholder="e.g., 'Covers the main entrance and porch'"
+                                    />
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+        </ScrollArea>
 
         <Button onClick={handleSuggestLayout} disabled={isPending}>
           <Wand2 className="mr-2 h-4 w-4" />
