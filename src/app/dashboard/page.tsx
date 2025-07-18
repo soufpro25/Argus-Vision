@@ -177,12 +177,16 @@ export default function Dashboard() {
     }
   };
 
-  const handleSaveLayout = (newLayout: Layout) => {
-    const newLayouts = [...layouts, newLayout];
+  const handleSaveLayouts = (newLayouts: Layout[]) => {
     setLayouts(newLayouts);
     localStorage.setItem('layouts', JSON.stringify(newLayouts));
-    setActiveLayout(newLayout);
-    setIsLayoutManagerOpen(false);
+    
+    // If the active layout was deleted, select the first one
+    if (activeLayout && !newLayouts.find(l => l.id === activeLayout.id)) {
+        setActiveLayout(newLayouts[0] || null);
+    } else if (!activeLayout && newLayouts.length > 0) {
+        setActiveLayout(newLayouts[0]);
+    }
   };
   
   const handleOpenDetector = (camera: Camera, frame: string | null) => {
@@ -384,7 +388,13 @@ export default function Dashboard() {
       </div>
       
       {fullscreenCamera && <FullscreenView camera={fullscreenCamera} onClose={() => setFullscreenCamera(null)} />}
-      <LayoutManager open={isLayoutManagerOpen} onOpenChange={setIsLayoutManagerOpen} cameras={cameras} onLayoutSave={handleSaveLayout} />
+      <LayoutManager 
+        open={isLayoutManagerOpen} 
+        onOpenChange={setIsLayoutManagerOpen} 
+        cameras={cameras} 
+        layouts={layouts}
+        onLayoutsSave={handleSaveLayouts} 
+      />
       <ObjectDetectionPanel 
         open={isObjectDetectorOpen} 
         onOpenChange={setIsObjectDetectorOpen} 

@@ -9,20 +9,22 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { suggestLayoutAction } from '@/app/actions';
-import { Loader2, Wand2, AlertCircle } from 'lucide-react';
+import { Loader2, Wand2, AlertCircle, Trash2 } from 'lucide-react';
 import type { Camera, Layout } from '@/lib/types';
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { ScrollArea } from './ui/scroll-area';
+import { Separator } from './ui/separator';
 
 interface LayoutManagerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   cameras: Camera[];
-  onLayoutSave: (newLayout: Layout) => void;
+  layouts: Layout[];
+  onLayoutsSave: (layouts: Layout[]) => void;
 }
 
-export function LayoutManager({ open, onOpenChange, cameras, onLayoutSave }: LayoutManagerProps) {
+export function LayoutManager({ open, onOpenChange, cameras, layouts, onLayoutsSave }: LayoutManagerProps) {
   const [isPending, startTransition] = useTransition();
   const [cameraDescriptions, setCameraDescriptions] = useState<Camera[]>([]);
   const [suggestedLayout, setSuggestedLayout] = useState<{ layout: string[], reasoning: string } | null>(null);
@@ -103,90 +105,137 @@ export function LayoutManager({ open, onOpenChange, cameras, onLayoutSave }: Lay
             cameras: suggestedLayout.layout,
         }
     };
-    onLayoutSave(newLayout);
+
+    const newLayouts = [...layouts, newLayout];
+    onLayoutsSave(newLayouts);
+
     toast({
         title: 'Layout Saved!',
         description: `New layout "${layoutName}" has been added.`,
     });
-    onOpenChange(false);
+    setSuggestedLayout(null);
+    setLayoutName('');
+  };
+  
+  const handleDeleteLayout = (layoutId: string) => {
+    const newLayouts = layouts.filter(l => l.id !== layoutId);
+    onLayoutsSave(newLayouts);
+    toast({
+        variant: 'destructive',
+        title: 'Layout Deleted',
+    });
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl">
+      <DialogContent className="sm:max-w-4xl grid-rows-[auto,1fr,auto] max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle>AI Layout Manager</DialogTitle>
+          <DialogTitle>Layout Manager</DialogTitle>
           <DialogDescription>
-            Describe your camera locations and let AI suggest an optimal grid layout.
+            Manage your saved layouts or use AI to suggest a new one based on camera locations.
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="max-h-[50vh] pr-4 -mr-4">
-            <div className="grid gap-6 py-4">
-                {Object.entries(groupedCameras).map(([server, cams]) => (
-                    <Card key={server}>
-                        <CardHeader>
-                            <CardTitle>{server}</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            {cams.map(cam => (
-                                <div key={cam.id} className="space-y-2">
-                                    <Label htmlFor={`desc-${cam.id}`}>{cam.name}</Label>
-                                    <Textarea
-                                        id={`desc-${cam.id}`}
-                                        value={cam.description}
-                                        onChange={e => handleDescriptionChange(cam.id, e.target.value)}
-                                        placeholder="e.g., 'Covers the main entrance and porch'"
-                                    />
-                                </div>
-                            ))}
-                        </CardContent>
-                    </Card>
-                ))}
-            </div>
-        </ScrollArea>
-
-        <Button onClick={handleSuggestLayout} disabled={isPending}>
-          <Wand2 className="mr-2 h-4 w-4" />
-          {isPending ? 'Generating...' : 'Suggest Layout'}
-        </Button>
-
-        {isPending && <div className="flex items-center justify-center p-4"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>}
         
-        {error && (
-            <div className="flex items-center text-destructive p-3 bg-destructive/10 rounded-md">
-                <AlertCircle className="h-5 w-5 mr-3" />
-                <span>{error}</span>
+        <div className="grid md:grid-cols-2 gap-6 overflow-hidden">
+            <div className="flex flex-col gap-4">
+                <h3 className="font-semibold text-lg">AI Layout Generator</h3>
+                <ScrollArea className="pr-4 -mr-4">
+                    <div className="grid gap-6 py-4">
+                        {Object.entries(groupedCameras).map(([server, cams]) => (
+                            <Card key={server}>
+                                <CardHeader>
+                                    <CardTitle>{server}</CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    {cams.map(cam => (
+                                        <div key={cam.id} className="space-y-2">
+                                            <Label htmlFor={`desc-${cam.id}`}>{cam.name}</Label>
+                                            <Textarea
+                                                id={`desc-${cam.id}`}
+                                                value={cam.description}
+                                                onChange={e => handleDescriptionChange(cam.id, e.target.value)}
+                                                placeholder="e.g., 'Covers the main entrance and porch'"
+                                            />
+                                        </div>
+                                    ))}
+                                </CardContent>
+                            </Card>
+                        ))}
+                         {cameras.length === 0 && (
+                            <p className="text-sm text-muted-foreground text-center py-8">Add cameras in settings to generate a layout.</p>
+                        )}
+                    </div>
+                </ScrollArea>
+                 <Button onClick={handleSuggestLayout} disabled={isPending || cameras.length === 0}>
+                    <Wand2 className="mr-2 h-4 w-4" />
+                    {isPending ? 'Generating...' : 'Suggest Layout'}
+                </Button>
             </div>
-        )}
+            
+            <div className="flex flex-col gap-4">
+                <h3 className="font-semibold text-lg">Saved Layouts</h3>
+                <ScrollArea className="pr-4 -mr-4">
+                    {layouts.length > 0 ? (
+                        <div className="space-y-2">
+                            {layouts.map(layout => (
+                                <Card key={layout.id} className="flex items-center p-3">
+                                    <div className="flex-grow">
+                                        <p className="font-medium">{layout.name}</p>
+                                        <p className="text-sm text-muted-foreground">{layout.grid.cameras.length} cameras</p>
+                                    </div>
+                                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDeleteLayout(layout.id)}>
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </Card>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="flex items-center justify-center h-full border-2 border-dashed rounded-md">
+                            <p className="text-muted-foreground text-sm">No layouts saved yet.</p>
+                        </div>
+                    )}
+                </ScrollArea>
 
-        {suggestedLayout && (
-          <div className="mt-4 space-y-4 p-4 border rounded-lg bg-background/50">
-            <h3 className="font-semibold">Suggested Layout</h3>
-            <div className="space-y-2">
-              <Label htmlFor="layout-name">Layout Name</Label>
-              <Input id="layout-name" value={layoutName} onChange={e => setLayoutName(e.target.value)} />
-            </div>
-            <div className="p-4 border rounded-md">
-              <h4 className="text-sm font-medium mb-2">Preview</h4>
-              <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${Math.ceil(Math.sqrt(suggestedLayout.layout.length))}, minmax(0, 1fr))` }}>
-                {suggestedLayout.layout.map(camId => (
-                  <div key={camId} className="bg-muted p-2 rounded-md text-center text-sm text-muted-foreground">
-                    {cameras.find(c => c.id === camId)?.name || 'Unknown'}
+                {suggestedLayout && (
+                  <div className="mt-4 space-y-4 p-4 border rounded-lg bg-background/50">
+                    <h3 className="font-semibold">Suggested Layout Preview</h3>
+                     <Separator />
+                    <div className="space-y-2">
+                      <Label htmlFor="layout-name">Layout Name</Label>
+                      <Input id="layout-name" value={layoutName} onChange={e => setLayoutName(e.target.value)} />
+                    </div>
+                    <div className="p-4 border rounded-md">
+                      <h4 className="text-sm font-medium mb-2">Camera Order</h4>
+                      <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${Math.ceil(Math.sqrt(suggestedLayout.layout.length))}, minmax(0, 1fr))` }}>
+                        {suggestedLayout.layout.map(camId => (
+                          <div key={camId} className="bg-muted p-2 rounded-md text-center text-sm text-muted-foreground truncate">
+                            {cameras.find(c => c.id === camId)?.name || 'Unknown'}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="p-4 border rounded-md">
+                        <h4 className="text-sm font-medium mb-2">AI Reasoning</h4>
+                        <p className="text-sm text-muted-foreground">{suggestedLayout.reasoning}</p>
+                    </div>
+                     <Button onClick={handleSaveLayout} disabled={!suggestedLayout || !layoutName || isPending} className="w-full">
+                        Save Suggested Layout
+                      </Button>
                   </div>
-                ))}
-              </div>
+                )}
+                 {error && (
+                    <div className="flex items-center text-destructive p-3 bg-destructive/10 rounded-md">
+                        <AlertCircle className="h-5 w-5 mr-3" />
+                        <span>{error}</span>
+                    </div>
+                )}
+                 {isPending && <div className="flex items-center justify-center p-4"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>}
             </div>
-            <div className="p-4 border rounded-md">
-                <h4 className="text-sm font-medium mb-2">AI Reasoning</h4>
-                <p className="text-sm text-muted-foreground">{suggestedLayout.reasoning}</p>
-            </div>
-          </div>
-        )}
+        </div>
+
 
         <DialogFooter>
-          <Button onClick={handleSaveLayout} disabled={!suggestedLayout || !layoutName || isPending}>
-            Save Layout
-          </Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
