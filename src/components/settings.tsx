@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -8,9 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Settings as SettingsIcon, Plus, Edit, Trash2 } from 'lucide-react';
+import { Settings as SettingsIcon, Plus, Edit, Trash2, Camera as CameraIcon } from 'lucide-react';
 import type { Camera } from '@/lib/types';
 import { getCameras } from '@/lib/storage';
 import { useToast } from '@/hooks/use-toast';
@@ -96,7 +97,7 @@ export default function Settings() {
 
     return (
         <div className="h-full w-full p-4 md:p-6">
-            <div className="flex items-center justify-between gap-4 mb-6">
+            <header className="flex items-center justify-between gap-4 mb-6">
                  <div className="flex items-center gap-4">
                     <SettingsIcon className="h-8 w-8 text-primary" />
                     <div>
@@ -107,7 +108,7 @@ export default function Settings() {
                 <Button onClick={() => handleOpenDialog()}>
                     <Plus className="mr-2 h-4 w-4" /> Add Camera
                 </Button>
-            </div>
+            </header>
 
             <Card>
                 <CardHeader>
@@ -117,10 +118,18 @@ export default function Settings() {
                 <CardContent>
                     <div className="space-y-4">
                         {cameras.map(camera => (
-                            <div key={camera.id} className="flex items-center justify-between p-4 border rounded-lg">
-                                <div>
+                            <Card key={camera.id} className="flex items-center p-4">
+                                <Image 
+                                    src={camera.thumbnailUrl} 
+                                    width={120} 
+                                    height={90} 
+                                    alt={camera.name} 
+                                    className="aspect-video w-[120px] rounded-md object-cover mr-4 bg-muted"
+                                />
+                                <div className="flex-grow">
                                     <p className="font-semibold">{camera.name}</p>
-                                    <p className="text-sm text-muted-foreground">{camera.streamUrl}</p>
+                                    <p className="text-sm text-muted-foreground truncate">{camera.description}</p>
+                                    <p className="text-xs text-muted-foreground/50 font-mono truncate">{camera.streamUrl}</p>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(camera)}>
@@ -130,10 +139,14 @@ export default function Settings() {
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
                                 </div>
-                            </div>
+                            </Card>
                         ))}
                          {cameras.length === 0 && (
-                            <p className="text-center text-muted-foreground py-8">No cameras have been added yet.</p>
+                            <div className="flex flex-col items-center justify-center text-center text-muted-foreground py-12 border-2 border-dashed rounded-lg">
+                                <CameraIcon className="h-12 w-12 mb-4" />
+                                <p className="font-semibold">No cameras have been added yet.</p>
+                                <p className="text-sm">Click "Add Camera" to get started.</p>
+                            </div>
                         )}
                     </div>
                 </CardContent>

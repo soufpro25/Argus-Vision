@@ -228,7 +228,7 @@ export default function Dashboard() {
               </Button>
             </div>
           </header>
-          <div className="flex-1 p-4 bg-background/90 overflow-auto">
+          <div className="flex-1 p-4 bg-background/95 overflow-auto">
             {activeLayout && activeLayout.grid.cameras.length > 0 ? (
                 <div className="h-full w-full grid gap-4" style={gridStyle}>
                 {activeLayout.grid.cameras.map((cameraId, index) => {
@@ -252,12 +252,17 @@ export default function Dashboard() {
                 })}
                 </div>
             ) : (
-                 <div className="flex flex-col items-center justify-center h-full text-center p-8 border-2 border-dashed rounded-lg">
-                    <LayoutGrid className="h-16 w-16 text-muted-foreground mb-4" />
-                    <h2 className="text-xl font-semibold">Welcome to Argus Vision</h2>
-                    <p className="text-muted-foreground mt-2">
-                        To get started, add a camera in the <Link href="/settings" className="text-primary underline">Settings</Link> page.
+                 <div className="flex flex-col items-center justify-center h-full text-center p-8 border-2 border-dashed rounded-lg bg-card">
+                    <Aperture className="h-16 w-16 text-primary mb-4" />
+                    <h2 className="text-2xl font-bold tracking-tight">Welcome to Argus Vision</h2>
+                    <p className="text-muted-foreground mt-2 max-w-md mx-auto">
+                        Your self-hosted surveillance hub. To get started, add your first camera feed.
                     </p>
+                    <Button asChild className="mt-6">
+                        <Link href="/settings">
+                            <Settings className="mr-2 h-4 w-4" /> Add a Camera
+                        </Link>
+                    </Button>
                 </div>
             )}
           </div>

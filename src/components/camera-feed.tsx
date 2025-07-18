@@ -45,7 +45,7 @@ export function CameraFeed({ camera, onFullscreen, onDetect, onRecord }: CameraF
   };
 
   return (
-    <Card className="flex flex-col h-full bg-card/50 hover:shadow-accent/10 hover:shadow-lg transition-shadow duration-300">
+    <Card className="flex flex-col h-full bg-card/50 hover:shadow-primary/10 hover:shadow-lg transition-shadow duration-300 border-0">
       <CardHeader className="flex flex-row items-center justify-between p-3">
         <CardTitle className="text-base font-medium">{camera.name}</CardTitle>
          {isRecording && (
