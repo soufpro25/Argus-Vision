@@ -97,9 +97,11 @@ export default function Settings() {
 
     return (
         <div className="h-full w-full p-4 md:p-6">
-            <header className="flex items-center justify-between gap-4 mb-6">
+            <header className="flex items-center justify-between gap-4 mb-6 border-b pb-4">
                  <div className="flex items-center gap-4">
-                    <SettingsIcon className="h-8 w-8 text-primary" />
+                    <div className="bg-primary/10 p-3 rounded-lg">
+                        <SettingsIcon className="h-6 w-6 text-primary" />
+                    </div>
                     <div>
                         <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
                         <p className="text-muted-foreground">Manage your cameras and application settings.</p>
@@ -118,7 +120,7 @@ export default function Settings() {
                 <CardContent>
                     <div className="space-y-4">
                         {cameras.map(camera => (
-                            <Card key={camera.id} className="flex items-center p-4">
+                            <Card key={camera.id} className="flex items-center p-4 bg-card/50 hover:bg-muted/50 transition-colors">
                                 <Image 
                                     src={camera.thumbnailUrl} 
                                     width={120} 

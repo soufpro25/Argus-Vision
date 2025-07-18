@@ -39,8 +39,10 @@ export default function Playback() {
 
     return (
         <div className="h-full w-full p-4 md:p-6 flex flex-col">
-            <header className="flex items-center gap-4 mb-6 shrink-0">
-                <ListVideo className="h-8 w-8 text-primary" />
+            <header className="flex items-center gap-4 mb-6 shrink-0 border-b pb-4">
+                <div className="bg-primary/10 p-3 rounded-lg">
+                    <ListVideo className="h-6 w-6 text-primary" />
+                </div>
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight">Playback</h1>
                     <p className="text-muted-foreground">Review and watch recorded video clips.</p>
@@ -52,7 +54,7 @@ export default function Playback() {
                  <ScrollArea className="h-full pr-4">
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {recordings.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).map(rec => (
-                            <Card key={rec.id} className="overflow-hidden flex flex-col group bg-card hover:border-primary/50 transition-colors">
+                            <Card key={rec.id} className="overflow-hidden flex flex-col group bg-card hover:border-primary/50 transition-all duration-300 transform hover:-translate-y-1">
                                  <div className="relative aspect-video overflow-hidden">
                                     <video
                                         src={rec.videoDataUri}
@@ -60,18 +62,18 @@ export default function Playback() {
                                         muted
                                         preload="metadata"
                                     />
-                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Button size="icon" className="h-14 w-14 rounded-full" onClick={() => handlePlayRecording(rec)}>
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <Button size="icon" className="h-14 w-14 rounded-full bg-primary/80 backdrop-blur-sm" onClick={() => handlePlayRecording(rec)}>
                                             <PlayCircle className="h-8 w-8" />
                                         </Button>
                                     </div>
                                 </div>
                                 <CardHeader>
-                                    <CardTitle className="text-lg truncate">{rec.title}</CardTitle>
+                                    <CardTitle className="text-base truncate">{rec.title}</CardTitle>
                                     <CardDescription>{new Date(rec.timestamp).toLocaleString()}</CardDescription>
                                 </CardHeader>
-                                <CardContent className="flex-grow space-y-2">
-                                    <p className="text-sm text-muted-foreground line-clamp-3">{rec.summary}</p>
+                                <CardContent className="flex-grow">
+                                    <p className="text-sm text-muted-foreground line-clamp-2">{rec.summary}</p>
                                 </CardContent>
                             </Card>
                         ))}

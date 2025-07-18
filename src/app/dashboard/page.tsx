@@ -228,7 +228,7 @@ export default function Dashboard() {
               </Button>
             </div>
           </header>
-          <div className="flex-1 p-4 bg-background/95 overflow-auto">
+          <div className="flex-1 p-4 bg-background/95 overflow-auto bg-grid-pattern">
             {activeLayout && activeLayout.grid.cameras.length > 0 ? (
                 <div className="h-full w-full grid gap-4" style={gridStyle}>
                 {activeLayout.grid.cameras.map((cameraId, index) => {

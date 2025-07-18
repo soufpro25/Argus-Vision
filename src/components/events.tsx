@@ -42,8 +42,10 @@ export default function Events() {
 
     return (
         <div className="h-full w-full p-4 md:p-6 flex flex-col">
-            <header className="flex items-center gap-4 mb-6 shrink-0">
-                <History className="h-8 w-8 text-primary" />
+            <header className="flex items-center gap-4 mb-6 shrink-0 border-b pb-4">
+                <div className="bg-primary/10 p-3 rounded-lg">
+                    <History className="h-6 w-6 text-primary" />
+                </div>
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight">Event Log</h1>
                     <p className="text-muted-foreground">A log of all significant system events.</p>

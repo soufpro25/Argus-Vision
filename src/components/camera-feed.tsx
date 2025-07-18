@@ -45,8 +45,8 @@ export function CameraFeed({ camera, onFullscreen, onDetect, onRecord }: CameraF
   };
 
   return (
-    <Card className="flex flex-col h-full bg-card/50 hover:shadow-primary/10 hover:shadow-lg transition-shadow duration-300 border-0">
-      <CardHeader className="flex flex-row items-center justify-between p-3">
+    <Card className="flex flex-col h-full bg-card/50 border-0 shadow-none">
+      <CardHeader className="flex flex-row items-center justify-between p-3 border-b">
         <CardTitle className="text-base font-medium">{camera.name}</CardTitle>
          {isRecording && (
           <div className="flex items-center gap-2 text-destructive animate-pulse">
