@@ -3,7 +3,7 @@
 
 import { useState, useTransition, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Aperture, History, LayoutGrid, ScanSearch, Settings, Wand2, Loader2, ListVideo, CircleDot, Play } from 'lucide-react';
+import { Aperture, History, LayoutGrid, ScanSearch, Settings, Wand2, Loader2, ListVideo, CircleDot, Play, LogOut } from 'lucide-react';
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger
 } from '@/components/ui/sidebar';
@@ -18,6 +18,8 @@ import { summarizeRecordingAction } from '../actions';
 import { getCameras, getLayouts, getRecordings } from '@/lib/storage';
 import { Slider } from '@/components/ui/slider';
 import Playback from '@/components/playback';
+import { useAuth } from '@/hooks/use-auth';
+import { useRouter } from 'next/navigation';
 
 const RECORDING_INTERVAL = 15 * 60 * 1000; // 15 minutes
 
@@ -33,6 +35,8 @@ export default function Dashboard() {
   const [isRecordingPending, startRecordingTransition] = useTransition();
   const [isLive, setIsLive] = useState(true);
   const { toast } = useToast();
+  const { user, logout } = useAuth();
+  const router = useRouter();
 
   const cameraFeedRefs = useRef<Map<string, CameraFeedHandle | null>>(new Map());
 
@@ -61,6 +65,12 @@ export default function Dashboard() {
       setLayouts([defaultLayout]);
     }
   }, []);
+  
+  const handleLogout = () => {
+    logout();
+    router.push('/login');
+    toast({ title: "Logged out successfully." });
+  }
 
   const handleManualRecord = async () => {
     const firstCamera = cameras[0];
@@ -141,6 +151,8 @@ export default function Dashboard() {
   }
   
   useEffect(() => {
+    if (user?.role !== 'admin') return;
+
     const intervalId = setInterval(() => {
       if (cameras.length > 0) {
         console.log('Kicking off automated 15-minute recording...');
@@ -154,7 +166,7 @@ export default function Dashboard() {
 
     // Clear interval on component unmount
     return () => clearInterval(intervalId);
-  }, [cameras]);
+  }, [cameras, user]);
   
 
   const handleLayoutChange = (layoutId: string) => {
@@ -245,17 +257,29 @@ export default function Dashboard() {
                         </SidebarMenuButton>
                     </Link>
                 </SidebarMenuItem>
+                 {user?.role === 'admin' && (
+                    <SidebarMenuItem>
+                        <Link href="/settings" className="w-full">
+                            <SidebarMenuButton tooltip="Settings">
+                                <Settings/>
+                                <span className="group-data-[collapsible=icon]:hidden">Settings</span>
+                            </SidebarMenuButton>
+                        </Link>
+                    </SidebarMenuItem>
+                 )}
             </SidebarMenu>
           </SidebarContent>
           <SidebarFooter>
+             <div className='p-2 text-sm text-muted-foreground group-data-[collapsible=icon]:hidden'>
+                <p className='font-semibold text-foreground'>{user?.username}</p>
+                <p className='capitalize'>{user?.role}</p>
+             </div>
             <SidebarMenu>
                  <SidebarMenuItem>
-                    <Link href="/settings" className="w-full">
-                        <SidebarMenuButton tooltip="Settings">
-                            <Settings/>
-                            <span className="group-data-[collapsible=icon]:hidden">Settings</span>
-                        </SidebarMenuButton>
-                    </Link>
+                    <SidebarMenuButton tooltip="Logout" onClick={handleLogout}>
+                        <LogOut />
+                        <span className="group-data-[collapsible=icon]:hidden">Logout</span>
+                    </SidebarMenuButton>
                 </SidebarMenuItem>
             </SidebarMenu>
           </SidebarFooter>
@@ -276,14 +300,18 @@ export default function Dashboard() {
                       ))}
                   </SelectContent>
               </Select>
-              <Button onClick={() => setIsLayoutManagerOpen(true)}>
-                  <Wand2 className="mr-0 md:mr-2 h-4 w-4"/>
-                  <span className="hidden md:inline">Manage Layouts</span>
-              </Button>
-               <Button variant="destructive" onClick={handleManualRecord} disabled={isRecordingPending}>
-                  {isRecordingPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CircleDot className="mr-0 md:mr-2 h-4 w-4"/>}
-                  <span className="hidden md:inline">{isRecordingPending ? 'Recording...' : 'Record'}</span>
-              </Button>
+              {user?.role === 'admin' && (
+                <>
+                  <Button onClick={() => setIsLayoutManagerOpen(true)}>
+                      <Wand2 className="mr-0 md:mr-2 h-4 w-4"/>
+                      <span className="hidden md:inline">Manage Layouts</span>
+                  </Button>
+                   <Button variant="destructive" onClick={handleManualRecord} disabled={isRecordingPending}>
+                      {isRecordingPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CircleDot className="mr-0 md:mr-2 h-4 w-4"/>}
+                      <span className="hidden md:inline">{isRecordingPending ? 'Recording...' : 'Record'}</span>
+                  </Button>
+                </>
+              )}
             </div>
           </header>
           <div className="flex-1 p-4 bg-background/95 overflow-auto bg-grid-pattern flex flex-col">
@@ -301,6 +329,7 @@ export default function Dashboard() {
                                 camera={camera} 
                                 onFullscreen={setFullscreenCamera}
                                 onDetect={handleOpenDetector}
+                                showAdminControls={user?.role === 'admin'}
                             />
                             ) : (
                             <div className="h-full w-full flex items-center justify-center bg-muted/50 rounded-lg">
@@ -315,14 +344,22 @@ export default function Dashboard() {
                     <div className="flex flex-col items-center justify-center h-full text-center p-8 border-2 border-dashed rounded-lg bg-card">
                         <Aperture className="h-16 w-16 text-primary mb-4" />
                         <h2 className="text-2xl font-bold tracking-tight">Welcome to Argus Vision</h2>
-                        <p className="text-muted-foreground mt-2 max-w-md mx-auto">
-                            Your self-hosted surveillance hub. To get started, add your first camera feed.
-                        </p>
-                        <Button asChild className="mt-6">
-                            <Link href="/settings">
-                                <Settings className="mr-2 h-4 w-4" /> Add a Camera
-                            </Link>
-                        </Button>
+                        {user?.role === 'admin' ? (
+                            <>
+                                <p className="text-muted-foreground mt-2 max-w-md mx-auto">
+                                    Your self-hosted surveillance hub. To get started, add your first camera feed.
+                                </p>
+                                <Button asChild className="mt-6">
+                                    <Link href="/settings">
+                                        <Settings className="mr-2 h-4 w-4" /> Add a Camera
+                                    </Link>
+                                </Button>
+                            </>
+                        ): (
+                             <p className="text-muted-foreground mt-2 max-w-md mx-auto">
+                                No cameras have been configured. Please contact an administrator.
+                            </p>
+                        )}
                     </div>
                 )}
               </>
@@ -356,5 +393,3 @@ export default function Dashboard() {
     </SidebarProvider>
   );
 }
-
-    

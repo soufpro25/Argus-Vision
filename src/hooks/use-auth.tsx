@@ -1,0 +1,87 @@
+
+"use client";
+
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import type { User } from '@/lib/types';
+import { getActiveUser, getUsers } from '@/lib/storage';
+
+interface AuthContextType {
+  user: User | null;
+  isLoading: boolean;
+  login: (username: string, password?: string) => Promise<boolean>;
+  logout: () => void;
+  signup: (username: string, password?: string) => Promise<boolean>;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const activeUser = getActiveUser();
+    setUser(activeUser);
+    setIsLoading(false);
+  }, []);
+
+  const login = async (username: string, password?: string): Promise<boolean> => {
+    const users = getUsers();
+    const foundUser = users.find(u => u.username === username && u.password === password);
+
+    if (foundUser) {
+      const userToStore = { id: foundUser.id, username: foundUser.username, role: foundUser.role };
+      localStorage.setItem('activeUser', JSON.stringify(userToStore));
+      setUser(userToStore);
+      return true;
+    }
+    return false;
+  };
+  
+  const signup = async (username: string, password?: string): Promise<boolean> => {
+    const users = getUsers();
+    
+    // First user is always an admin
+    const role = users.length === 0 ? 'admin' : 'viewer';
+    
+    if (users.find(u => u.username === username)) {
+      return false; // User already exists
+    }
+
+    const newUser: User = {
+        id: `user-${Date.now()}`,
+        username,
+        password,
+        role,
+    };
+    
+    const updatedUsers = [...users, newUser];
+    localStorage.setItem('users', JSON.stringify(updatedUsers));
+    
+    // Automatically log in the new user
+    const userToStore = { id: newUser.id, username: newUser.username, role: newUser.role };
+    localStorage.setItem('activeUser', JSON.stringify(userToStore));
+    setUser(userToStore);
+
+    return true;
+  }
+
+  const logout = () => {
+    localStorage.removeItem('activeUser');
+    setUser(null);
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, isLoading, login, logout, signup }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};

@@ -1,3 +1,10 @@
+export interface User {
+  id: string;
+  username: string;
+  password?: string; // Should be handled securely in a real app
+  role: 'admin' | 'viewer';
+}
+
 export interface Camera {
   id: string;
   name: string;

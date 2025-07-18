@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { SidebarProvider } from '@/components/ui/sidebar';
+import { AuthProvider } from '@/hooks/use-auth';
 import { Inter } from 'next/font/google';
 import { cn } from '@/lib/utils';
 
@@ -23,10 +24,12 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body className={cn("font-sans antialiased", fontSans.variable)}>
-        <SidebarProvider>
-          {children}
-        </SidebarProvider>
-        <Toaster />
+          <AuthProvider>
+            <SidebarProvider>
+              {children}
+            </SidebarProvider>
+            <Toaster />
+          </AuthProvider>
       </body>
     </html>
   );

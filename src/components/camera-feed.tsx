@@ -12,6 +12,7 @@ interface CameraFeedProps {
   camera: Camera;
   onFullscreen: (camera: Camera) => void;
   onDetect: (camera: Camera, frame: string | null) => void;
+  showAdminControls: boolean;
 }
 
 export interface CameraFeedHandle {
@@ -19,7 +20,7 @@ export interface CameraFeedHandle {
 }
 
 export const CameraFeed = forwardRef<CameraFeedHandle, CameraFeedProps>(
-  ({ camera, onFullscreen, onDetect }, ref) => {
+  ({ camera, onFullscreen, onDetect, showAdminControls }, ref) => {
     const videoStreamRef = useRef<VideoStreamRef>(null);
 
     useImperativeHandle(ref, () => ({
@@ -47,10 +48,12 @@ export const CameraFeed = forwardRef<CameraFeedHandle, CameraFeedProps>(
                   <Expand className="h-4 w-4" />
                   <span className="sr-only">Fullscreen</span>
               </Button>
-              <Button variant="ghost" size="icon" className="h-9 w-9 bg-black/50 backdrop-blur-sm hover:bg-black/70 text-white rounded-full" onClick={handleDetect}>
-                  <ScanSearch className="h-4 w-4" />
-                  <span className="sr-only">Detect Objects</span>
-              </Button>
+              {showAdminControls && (
+                <Button variant="ghost" size="icon" className="h-9 w-9 bg-black/50 backdrop-blur-sm hover:bg-black/70 text-white rounded-full" onClick={handleDetect}>
+                    <ScanSearch className="h-4 w-4" />
+                    <span className="sr-only">Detect Objects</span>
+                </Button>
+              )}
           </div>
         </CardContent>
       </Card>
@@ -76,5 +79,3 @@ export function FullscreenView({ camera, onClose }: { camera: Camera, onClose: (
         </div>
     );
 }
-
-    

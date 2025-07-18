@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useTransition } from 'react';
@@ -10,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { suggestLayoutAction } from '@/app/actions';
 import { Loader2, Wand2, AlertCircle } from 'lucide-react';
 import type { Camera, Layout } from '@/lib/types';
+import { useAuth } from '@/hooks/use-auth';
 
 interface LayoutManagerProps {
   open: boolean;
@@ -25,6 +27,9 @@ export function LayoutManager({ open, onOpenChange, cameras, onLayoutSave }: Lay
   const [layoutName, setLayoutName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  if (user?.role !== 'admin') return null;
 
   const handleDescriptionChange = (id: string, description: string) => {
     setCameraDescriptions(prev => prev.map(c => c.id === id ? { ...c, description } : c));

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -13,6 +14,7 @@ import { Loader2, AlertCircle } from 'lucide-react';
 import type { SmartObjectDetectionOutput } from '@/ai/flows/smart-object-detection';
 import type { Camera } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { useAuth } from '@/hooks/use-auth';
 
 interface ObjectDetectionPanelProps {
   open: boolean;
@@ -28,6 +30,7 @@ export function ObjectDetectionPanel({ open, onOpenChange, camera, initialFrame 
   const [error, setError] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
   
   useEffect(() => {
     if (open) {
@@ -85,6 +88,8 @@ export function ObjectDetectionPanel({ open, onOpenChange, camera, initialFrame 
       });
     }
   };
+  
+  if (user?.role !== 'admin') return null;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>

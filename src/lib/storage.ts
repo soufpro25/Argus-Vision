@@ -1,5 +1,5 @@
 
-import type { Camera, Layout, Recording } from "./types";
+import type { Camera, Layout, Recording, User } from "./types";
 
 function safelyParseJSON<T>(jsonString: string | null, fallback: T): T {
     if (!jsonString) return fallback;
@@ -29,4 +29,14 @@ export function getRecordings(): Recording[] {
     return safelyParseJSON<Recording[]>(stored, []);
 }
 
-    
+export function getUsers(): User[] {
+    if (typeof window === 'undefined') return [];
+    const stored = localStorage.getItem('users');
+    return safelyParseJSON<User[]>(stored, []);
+}
+
+export function getActiveUser(): User | null {
+     if (typeof window === 'undefined') return null;
+    const stored = localStorage.getItem('activeUser');
+    return safelyParseJSON<User | null>(stored, null);
+}
