@@ -1,242 +1,229 @@
 
 "use client";
 
-import { useState, useTransition, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { suggestLayoutAction } from '@/app/actions';
-import { Loader2, Wand2, AlertCircle, Trash2 } from 'lucide-react';
-import type { Camera, Layout } from '@/lib/types';
+import { Plus, Save, Trash2, Camera, GripVertical } from 'lucide-react';
+import type { Camera as CameraType, Layout } from '@/lib/types';
 import { useAuth } from '@/hooks/use-auth';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Card, CardContent } from './ui/card';
 import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
+import { Slider } from './ui/slider';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from './ui/select';
 
 interface LayoutManagerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  cameras: Camera[];
+  cameras: CameraType[];
   layouts: Layout[];
-  onLayoutsSave: (layouts: Layout[]) => void;
+  onLayoutsUpdate: (layouts: Layout[], activeLayoutId?: string) => void;
 }
 
-export function LayoutManager({ open, onOpenChange, cameras, layouts, onLayoutsSave }: LayoutManagerProps) {
-  const [isPending, startTransition] = useTransition();
-  const [cameraDescriptions, setCameraDescriptions] = useState<Camera[]>([]);
-  const [suggestedLayout, setSuggestedLayout] = useState<{ layout: string[], reasoning: string } | null>(null);
-  const [layoutName, setLayoutName] = useState('');
-  const [error, setError] = useState<string | null>(null);
+const MAX_GRID_SIZE = 8;
+
+export function LayoutManager({ open, onOpenChange, cameras, layouts, onLayoutsUpdate }: LayoutManagerProps) {
+  const [selectedLayout, setSelectedLayout] = useState<Layout | null>(null);
+  const [isCreatingNew, setIsCreatingNew] = useState(false);
+
   const { toast } = useToast();
   const { user } = useAuth();
-
-  useEffect(() => {
-    if (open) {
-      setCameraDescriptions(cameras);
-      setSuggestedLayout(null);
-      setLayoutName('');
-      setError(null);
-    }
-  }, [open, cameras]);
   
-  const groupedCameras = useMemo(() => {
-    return cameraDescriptions.reduce((acc, camera) => {
-        const serverKey = camera.server || 'Unassigned';
-        if (!acc[serverKey]) {
-            acc[serverKey] = [];
-        }
-        acc[serverKey].push(camera);
-        return acc;
-    }, {} as Record<string, Camera[]>);
-  }, [cameraDescriptions]);
+  useEffect(() => {
+    if (!open) {
+      setSelectedLayout(null);
+      setIsCreatingNew(false);
+    }
+  }, [open]);
 
   if (user?.role !== 'admin') return null;
-
-  const handleDescriptionChange = (id: string, description: string) => {
-    setCameraDescriptions(prev => prev.map(c => c.id === id ? { ...c, description } : c));
-  };
   
-  const handleSuggestLayout = () => {
-    setError(null);
-    setSuggestedLayout(null);
-    startTransition(async () => {
-      const cameraDetails = cameraDescriptions.map(c => ({
-          cameraId: c.id,
-          locationDescription: c.description,
-          server: c.server,
-      }));
+  const handleSelectLayout = (layoutId: string) => {
+    const layout = layouts.find(l => l.id === layoutId);
+    setSelectedLayout(layout || null);
+    setIsCreatingNew(false);
+  }
 
-      const response = await suggestLayoutAction(cameraDetails);
-      if (response.success && response.data) {
-        setSuggestedLayout({ layout: response.data.suggestedLayout, reasoning: response.data.reasoning });
-        setLayoutName('AI Suggested Layout');
-      } else {
-        setError(response.error || 'An unexpected error occurred.');
-        toast({
-          variant: 'destructive',
-          title: 'Layout Suggestion Failed',
-          description: response.error,
-        });
-      }
-    });
-  };
-
-  const handleSaveLayout = () => {
-    if (!suggestedLayout || !layoutName) {
-        toast({
-          variant: 'destructive',
-          title: 'Cannot Save Layout',
-          description: 'Please generate a layout and provide a name first.',
-        });
-        return;
-    }
-    const cols = Math.ceil(Math.sqrt(suggestedLayout.layout.length));
-    const rows = Math.ceil(suggestedLayout.layout.length / cols);
-    
+  const handleCreateNew = () => {
     const newLayout: Layout = {
-        id: `layout-${Date.now()}`,
-        name: layoutName,
-        grid: {
-            rows,
-            cols,
-            cameras: suggestedLayout.layout,
-        }
+      id: `layout-new-${Date.now()}`,
+      name: 'New Custom Layout',
+      grid: {
+        rows: 2,
+        cols: 2,
+        cameras: Array(4).fill(null),
+      }
     };
-
-    const newLayouts = [...layouts, newLayout];
-    onLayoutsSave(newLayouts);
-
-    toast({
-        title: 'Layout Saved!',
-        description: `New layout "${layoutName}" has been added.`,
-    });
-    setSuggestedLayout(null);
-    setLayoutName('');
+    setSelectedLayout(newLayout);
+    setIsCreatingNew(true);
   };
   
+  const handleSaveLayout = (layoutToSave: Layout) => {
+    if (!layoutToSave.name) {
+      toast({ variant: 'destructive', title: 'Layout name cannot be empty.' });
+      return;
+    }
+    
+    let newLayouts = [...layouts];
+    if (isCreatingNew) {
+      newLayouts.push({ ...layoutToSave, id: `layout-${Date.now()}` });
+      toast({ title: 'Layout Created', description: `"${layoutToSave.name}" has been saved.` });
+    } else {
+      const index = newLayouts.findIndex(l => l.id === layoutToSave.id);
+      if (index > -1) {
+        newLayouts[index] = layoutToSave;
+        toast({ title: 'Layout Updated', description: `"${layoutToSave.name}" has been updated.` });
+      }
+    }
+    onLayoutsUpdate(newLayouts, layoutToSave.id);
+    setSelectedLayout(null);
+    setIsCreatingNew(false);
+  }
+
   const handleDeleteLayout = (layoutId: string) => {
     const newLayouts = layouts.filter(l => l.id !== layoutId);
-    onLayoutsSave(newLayouts);
-    toast({
-        variant: 'destructive',
-        title: 'Layout Deleted',
-    });
+    onLayoutsUpdate(newLayouts);
+    toast({ variant: 'destructive', title: 'Layout Deleted' });
+    if (selectedLayout?.id === layoutId) {
+      setSelectedLayout(null);
+    }
+  };
+
+  const renderLayoutList = () => (
+    <div className="flex flex-col gap-4">
+      <h3 className="font-semibold text-lg">Manage Layouts</h3>
+      <Button onClick={handleCreateNew}><Plus className="mr-2 h-4 w-4" /> Create New Layout</Button>
+      <Separator />
+      <h4 className="font-semibold text-md text-muted-foreground">Existing Layouts</h4>
+      <ScrollArea className="pr-4 -mr-4 flex-grow">
+          {layouts.length > 0 ? (
+              <div className="space-y-2">
+                  {layouts.map(layout => (
+                      <Card key={layout.id} className="flex items-center p-3 hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => handleSelectLayout(layout.id)}>
+                          <GripVertical className="h-5 w-5 text-muted-foreground mr-2" />
+                          <div className="flex-grow">
+                              <p className="font-medium">{layout.name}</p>
+                              <p className="text-sm text-muted-foreground">{layout.grid.cameras.length} cells ({layout.grid.rows}x{layout.grid.cols})</p>
+                          </div>
+                          <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); handleDeleteLayout(layout.id)}}>
+                              <Trash2 className="h-4 w-4" />
+                          </Button>
+                      </Card>
+                  ))}
+              </div>
+          ) : (
+              <div className="flex items-center justify-center h-full border-2 border-dashed rounded-md p-8">
+                  <p className="text-muted-foreground text-sm text-center">No layouts created yet. Click "Create New Layout" to start.</p>
+              </div>
+          )}
+      </ScrollArea>
+    </div>
+  );
+  
+  const renderLayoutEditor = (layout: Layout) => {
+    
+    const setEditorState = (newValues: Partial<Layout> | ((prev: Layout) => Layout)) => {
+        setSelectedLayout(prev => {
+            if (!prev) return null;
+            const updated = typeof newValues === 'function' ? newValues(prev) : {...prev, ...newValues};
+            return updated;
+        });
+    }
+
+    const handleGridChange = (rows: number, cols: number) => {
+      const currentCameras = layout.grid.cameras;
+      const newSize = rows * cols;
+      const newCameras = Array(newSize).fill(null);
+      // Preserve cameras that fit in the new grid
+      for (let i = 0; i < Math.min(currentCameras.length, newSize); i++) {
+        newCameras[i] = currentCameras[i];
+      }
+      setEditorState(prev => ({ ...prev, grid: { rows, cols, cameras: newCameras }}));
+    };
+    
+    const handleCellChange = (index: number, cameraId: string) => {
+       const newCameras = [...layout.grid.cameras];
+       newCameras[index] = cameraId === 'empty' ? null : cameraId;
+       setEditorState(prev => ({ ...prev, grid: { ...prev.grid, cameras: newCameras }}));
+    };
+
+    const gridStyle = {
+      gridTemplateColumns: `repeat(${layout.grid.cols}, minmax(0, 1fr))`,
+      gridTemplateRows: `repeat(${layout.grid.rows}, minmax(0, 1fr))`,
+    };
+
+    return (
+       <div className="flex flex-col gap-4 h-full">
+            <h3 className="font-semibold text-lg">{isCreatingNew ? "Create New Layout" : `Editing: ${layout.name}`}</h3>
+            
+            <div className="space-y-2">
+                <Label htmlFor="layout-name">Layout Name</Label>
+                <Input id="layout-name" value={layout.name} onChange={e => setEditorState({name: e.target.value})} />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <Label>Rows: {layout.grid.rows}</Label>
+                    <Slider defaultValue={[layout.grid.rows]} min={1} max={MAX_GRID_SIZE} step={1} onValueChange={(val) => handleGridChange(val[0], layout.grid.cols)} />
+                </div>
+                 <div className="space-y-2">
+                    <Label>Columns: {layout.grid.cols}</Label>
+                    <Slider defaultValue={[layout.grid.cols]} min={1} max={MAX_GRID_SIZE} step={1} onValueChange={(val) => handleGridChange(layout.grid.rows, val[0])} />
+                </div>
+            </div>
+            
+            <Separator />
+
+            <ScrollArea className="flex-grow -mx-6 px-6">
+                <Card className="bg-muted/30 p-4">
+                    <CardContent className="p-0">
+                         <div className="grid gap-2" style={gridStyle}>
+                            {layout.grid.cameras.map((camId, index) => (
+                                <div key={index} className="aspect-video bg-background rounded-md flex flex-col items-center justify-center p-2">
+                                     <Select value={camId ?? 'empty'} onValueChange={(val) => handleCellChange(index, val)}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select Camera" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="empty">-- Empty --</SelectItem>
+                                            <Separator />
+                                            {cameras.map(cam => (
+                                                <SelectItem key={cam.id} value={cam.id}>{cam.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+            </ScrollArea>
+             <div className="flex justify-between items-center mt-auto pt-4">
+                <Button variant="outline" onClick={() => setSelectedLayout(null)}>Back to List</Button>
+                <Button onClick={() => handleSaveLayout(layout)}><Save className="mr-2 h-4 w-4" /> Save Layout</Button>
+            </div>
+       </div>
+    );
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl grid-rows-[auto,1fr,auto] max-h-[90vh]">
+      <DialogContent className="sm:max-w-3xl h-[80vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Layout Manager</DialogTitle>
           <DialogDescription>
-            Manage your saved layouts or use AI to suggest a new one based on camera locations.
+            Create, edit, and manage your custom camera layouts.
           </DialogDescription>
         </DialogHeader>
         
-        <div className="grid md:grid-cols-2 gap-6 overflow-hidden">
-            <div className="flex flex-col gap-4">
-                <h3 className="font-semibold text-lg">AI Layout Generator</h3>
-                <ScrollArea className="pr-4 -mr-4">
-                    <div className="grid gap-6 py-4">
-                        {Object.entries(groupedCameras).map(([server, cams]) => (
-                            <Card key={server}>
-                                <CardHeader>
-                                    <CardTitle>{server}</CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    {cams.map(cam => (
-                                        <div key={cam.id} className="space-y-2">
-                                            <Label htmlFor={`desc-${cam.id}`}>{cam.name}</Label>
-                                            <Textarea
-                                                id={`desc-${cam.id}`}
-                                                value={cam.description}
-                                                onChange={e => handleDescriptionChange(cam.id, e.target.value)}
-                                                placeholder="e.g., 'Covers the main entrance and porch'"
-                                            />
-                                        </div>
-                                    ))}
-                                </CardContent>
-                            </Card>
-                        ))}
-                         {cameras.length === 0 && (
-                            <p className="text-sm text-muted-foreground text-center py-8">Add cameras in settings to generate a layout.</p>
-                        )}
-                    </div>
-                </ScrollArea>
-                 <Button onClick={handleSuggestLayout} disabled={isPending || cameras.length === 0}>
-                    <Wand2 className="mr-2 h-4 w-4" />
-                    {isPending ? 'Generating...' : 'Suggest Layout'}
-                </Button>
-            </div>
-            
-            <div className="flex flex-col gap-4">
-                <h3 className="font-semibold text-lg">Saved Layouts</h3>
-                <ScrollArea className="pr-4 -mr-4">
-                    {layouts.length > 0 ? (
-                        <div className="space-y-2">
-                            {layouts.map(layout => (
-                                <Card key={layout.id} className="flex items-center p-3">
-                                    <div className="flex-grow">
-                                        <p className="font-medium">{layout.name}</p>
-                                        <p className="text-sm text-muted-foreground">{layout.grid.cameras.length} cameras</p>
-                                    </div>
-                                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDeleteLayout(layout.id)}>
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </Card>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="flex items-center justify-center h-full border-2 border-dashed rounded-md">
-                            <p className="text-muted-foreground text-sm">No layouts saved yet.</p>
-                        </div>
-                    )}
-                </ScrollArea>
-
-                {suggestedLayout && (
-                  <div className="mt-4 space-y-4 p-4 border rounded-lg bg-background/50">
-                    <h3 className="font-semibold">Suggested Layout Preview</h3>
-                     <Separator />
-                    <div className="space-y-2">
-                      <Label htmlFor="layout-name">Layout Name</Label>
-                      <Input id="layout-name" value={layoutName} onChange={e => setLayoutName(e.target.value)} />
-                    </div>
-                    <div className="p-4 border rounded-md">
-                      <h4 className="text-sm font-medium mb-2">Camera Order</h4>
-                      <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${Math.ceil(Math.sqrt(suggestedLayout.layout.length))}, minmax(0, 1fr))` }}>
-                        {suggestedLayout.layout.map(camId => (
-                          <div key={camId} className="bg-muted p-2 rounded-md text-center text-sm text-muted-foreground truncate">
-                            {cameras.find(c => c.id === camId)?.name || 'Unknown'}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="p-4 border rounded-md">
-                        <h4 className="text-sm font-medium mb-2">AI Reasoning</h4>
-                        <p className="text-sm text-muted-foreground">{suggestedLayout.reasoning}</p>
-                    </div>
-                     <Button onClick={handleSaveLayout} disabled={!suggestedLayout || !layoutName || isPending} className="w-full">
-                        Save Suggested Layout
-                      </Button>
-                  </div>
-                )}
-                 {error && (
-                    <div className="flex items-center text-destructive p-3 bg-destructive/10 rounded-md">
-                        <AlertCircle className="h-5 w-5 mr-3" />
-                        <span>{error}</span>
-                    </div>
-                )}
-                 {isPending && <div className="flex items-center justify-center p-4"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>}
-            </div>
+        <div className="flex-grow overflow-hidden">
+            {selectedLayout ? renderLayoutEditor(selectedLayout) : renderLayoutList()}
         </div>
-
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
-        </DialogFooter>
+        
       </DialogContent>
     </Dialog>
   );

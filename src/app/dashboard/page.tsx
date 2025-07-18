@@ -53,6 +53,7 @@ export default function Dashboard() {
     if (loadedLayouts.length > 0) {
       setActiveLayout(loadedLayouts[0]);
     } else if (loadedCameras.length > 0) {
+      // Create a default 1x1 layout if no layouts exist
       const defaultLayout: Layout = {
         id: 'layout-default',
         name: 'Default View',
@@ -64,6 +65,7 @@ export default function Dashboard() {
       };
       setActiveLayout(defaultLayout);
       setLayouts([defaultLayout]);
+      localStorage.setItem('layouts', JSON.stringify([defaultLayout]));
     }
   }, []);
   
@@ -177,12 +179,13 @@ export default function Dashboard() {
     }
   };
 
-  const handleSaveLayouts = (newLayouts: Layout[]) => {
+  const onLayoutsUpdate = (newLayouts: Layout[], newActiveLayoutId?: string) => {
     setLayouts(newLayouts);
     localStorage.setItem('layouts', JSON.stringify(newLayouts));
     
-    // If the active layout was deleted, select the first one
-    if (activeLayout && !newLayouts.find(l => l.id === activeLayout.id)) {
+    if (newActiveLayoutId) {
+        setActiveLayout(newLayouts.find(l => l.id === newActiveLayoutId) || newLayouts[0] || null);
+    } else if (activeLayout && !newLayouts.find(l => l.id === activeLayout.id)) {
         setActiveLayout(newLayouts[0] || null);
     } else if (!activeLayout && newLayouts.length > 0) {
         setActiveLayout(newLayouts[0]);
@@ -393,7 +396,7 @@ export default function Dashboard() {
         onOpenChange={setIsLayoutManagerOpen} 
         cameras={cameras} 
         layouts={layouts}
-        onLayoutsSave={handleSaveLayouts} 
+        onLayoutsUpdate={onLayoutsUpdate} 
       />
       <ObjectDetectionPanel 
         open={isObjectDetectorOpen} 
