@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PlayCircle, ListVideo } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -54,11 +53,11 @@ export default function Playback() {
                  <ScrollArea className="h-full pr-4">
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {recordings.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).map(rec => (
-                            <Card key={rec.id} className="overflow-hidden flex flex-col group bg-card hover:border-primary/50 transition-all duration-300 transform hover:-translate-y-1">
+                            <Card key={rec.id} className="overflow-hidden flex flex-col group bg-card hover:border-primary/50 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/20">
                                  <div className="relative aspect-video overflow-hidden">
                                     <video
                                         src={rec.videoDataUri}
-                                        className="w-full h-full object-cover"
+                                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                                         muted
                                         preload="metadata"
                                     />

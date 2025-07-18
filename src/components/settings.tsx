@@ -120,7 +120,7 @@ export default function Settings() {
                 <CardContent>
                     <div className="space-y-4">
                         {cameras.map(camera => (
-                            <Card key={camera.id} className="flex items-center p-4 bg-card/50 hover:bg-muted/50 transition-colors">
+                            <Card key={camera.id} className="flex items-center p-4 bg-card/50 hover:bg-muted/50 transition-colors group hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10">
                                 <Image 
                                     src={camera.thumbnailUrl} 
                                     width={120} 
@@ -133,7 +133,7 @@ export default function Settings() {
                                     <p className="text-sm text-muted-foreground truncate">{camera.description}</p>
                                     <p className="text-xs text-muted-foreground/50 font-mono truncate">{camera.streamUrl}</p>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(camera)}>
                                         <Edit className="h-4 w-4" />
                                     </Button>

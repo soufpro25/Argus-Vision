@@ -12,22 +12,13 @@ function safelyParseJSON<T>(jsonString: string | null, fallback: T): T {
 }
 
 export function getCameras(): Camera[] {
-    if (typeof window === 'undefined') return mockCameras;
+    if (typeof window === 'undefined') return [];
     const stored = localStorage.getItem('cameras');
-    if (stored) {
-        return safelyParseJSON<Camera[]>(stored, mockCameras);
-    }
-    // If nothing is in storage, set it with mock data
-    localStorage.setItem('cameras', JSON.stringify(mockCameras));
-    return mockCameras;
+    return safelyParseJSON<Camera[]>(stored, []);
 }
 
 export function getLayouts(): Layout[] {
-    if (typeof window === 'undefined') return mockLayouts;
+    if (typeof window === 'undefined') return [];
     const stored = localStorage.getItem('layouts');
-    if (stored) {
-        return safelyParseJSON<Layout[]>(stored, mockLayouts);
-    }
-    localStorage.setItem('layouts', JSON.stringify(mockLayouts));
-    return mockLayouts;
+    return safelyParseJSON<Layout[]>(stored, []);
 }

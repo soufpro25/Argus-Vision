@@ -8,7 +8,6 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { mockCameras, mockLayouts } from '@/lib/mock-data';
 import type { Camera, Layout, Recording, Event } from '@/lib/types';
 import { CameraFeed, FullscreenView } from '@/components/camera-feed';
 import { LayoutManager } from '@/components/layout-manager';
