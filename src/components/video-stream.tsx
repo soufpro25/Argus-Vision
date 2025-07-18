@@ -1,3 +1,4 @@
+
 "use client";
 
 import { forwardRef, useImperativeHandle, useRef, useState, useEffect } from 'react';
@@ -10,13 +11,9 @@ interface VideoStreamProps {
 
 export const VideoStream = forwardRef<{ 
   captureFrame: () => string | null;
-  startRecording: () => void;
-  stopRecording: () => Promise<string | null>;
 }, VideoStreamProps>(
   ({ streamUrl, thumbnailUrl }, ref) => {
     const videoRef = useRef<HTMLVideoElement>(null);
-    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-    const recordedChunksRef = useRef<Blob[]>([]);
     const [isError, setIsError] = useState(false);
 
     useImperativeHandle(ref, () => ({
@@ -33,36 +30,6 @@ export const VideoStream = forwardRef<{
         }
         return null;
       },
-      startRecording: () => {
-        if (videoRef.current && videoRef.current.srcObject && !isError) {
-            recordedChunksRef.current = [];
-            const stream = videoRef.current.srcObject as MediaStream;
-            mediaRecorderRef.current = new MediaRecorder(stream, { mimeType: 'video/webm' });
-            mediaRecorderRef.current.ondataavailable = (event) => {
-                if (event.data.size > 0) {
-                    recordedChunksRef.current.push(event.data);
-                }
-            };
-            mediaRecorderRef.current.start();
-        }
-      },
-      stopRecording: () => {
-        return new Promise((resolve) => {
-            if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-                mediaRecorderRef.current.onstop = () => {
-                    const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                        resolve(reader.result as string);
-                    };
-                    reader.readAsDataURL(blob);
-                };
-                mediaRecorderRef.current.stop();
-            } else {
-                resolve(null);
-            }
-        });
-      }
     }));
     
     useEffect(() => {
@@ -71,11 +38,8 @@ export const VideoStream = forwardRef<{
         async function setupVideoStream() {
             if (videoRef.current) {
                 try {
-                    // Using a public video stream for demo purposes
                     const demoVideoUrl = 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
                     
-                    // To enable recording, we need a MediaStream.
-                    // We'll play the video in a hidden element and capture its stream.
                     const sourceVideo = document.createElement('video');
                     sourceVideo.src = demoVideoUrl;
                     sourceVideo.crossOrigin = 'anonymous';
@@ -140,3 +104,5 @@ export const VideoStream = forwardRef<{
 );
 
 VideoStream.displayName = 'VideoStream';
+
+    

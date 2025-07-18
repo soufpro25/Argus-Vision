@@ -1,5 +1,5 @@
-import { mockCameras, mockLayouts } from "./mock-data";
-import type { Camera, Layout } from "./types";
+
+import type { Camera, Layout, Recording } from "./types";
 
 function safelyParseJSON<T>(jsonString: string | null, fallback: T): T {
     if (!jsonString) return fallback;
@@ -22,3 +22,11 @@ export function getLayouts(): Layout[] {
     const stored = localStorage.getItem('layouts');
     return safelyParseJSON<Layout[]>(stored, []);
 }
+
+export function getRecordings(): Recording[] {
+    if (typeof window === 'undefined') return [];
+    const stored = localStorage.getItem('recordings');
+    return safelyParseJSON<Recording[]>(stored, []);
+}
+
+    

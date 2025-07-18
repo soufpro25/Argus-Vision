@@ -1,8 +1,9 @@
+
 "use client";
 
 import { useState, useTransition, useEffect } from 'react';
 import Link from 'next/link';
-import { Aperture, History, LayoutGrid, ScanSearch, Settings, Wand2, Loader2, ListVideo } from 'lucide-react';
+import { Aperture, History, LayoutGrid, ScanSearch, Settings, Wand2, Loader2, ListVideo, CircleDot, Play } from 'lucide-react';
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger
 } from '@/components/ui/sidebar';
@@ -14,28 +15,35 @@ import { LayoutManager } from '@/components/layout-manager';
 import { ObjectDetectionPanel } from '@/components/object-detection-panel';
 import { useToast } from '@/hooks/use-toast';
 import { summarizeRecordingAction } from '../actions';
-import { getCameras, getLayouts } from '@/lib/storage';
+import { getCameras, getLayouts, getRecordings } from '@/lib/storage';
+import { Slider } from '@/components/ui/slider';
+import Playback from '@/components/playback';
 
 export default function Dashboard() {
   const [cameras, setCameras] = useState<Camera[]>([]);
   const [layouts, setLayouts] = useState<Layout[]>([]);
+  const [recordings, setRecordings] = useState<Recording[]>([]);
   const [activeLayout, setActiveLayout] = useState<Layout | null>(null);
   const [fullscreenCamera, setFullscreenCamera] = useState<Camera | null>(null);
   const [isLayoutManagerOpen, setIsLayoutManagerOpen] = useState(false);
   const [isObjectDetectorOpen, setIsObjectDetectorOpen] = useState(false);
   const [detectionData, setDetectionData] = useState<{camera: Camera, frame: string | null} | null>(null);
   const [isRecordingPending, startRecordingTransition] = useTransition();
+  const [isLive, setIsLive] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
     const loadedCameras = getCameras();
     const loadedLayouts = getLayouts();
+    const loadedRecordings = getRecordings();
+
     setCameras(loadedCameras);
     setLayouts(loadedLayouts);
+    setRecordings(loadedRecordings);
+
     if (loadedLayouts.length > 0) {
       setActiveLayout(loadedLayouts[0]);
     } else if (loadedCameras.length > 0) {
-      // Create a default layout if none exist
       const defaultLayout: Layout = {
         id: 'layout-default',
         name: 'Default View',
@@ -79,65 +87,22 @@ export default function Dashboard() {
       });
       return;
     }
-    // This is a fallback for the sidebar button. It won't have a frame.
     handleOpenDetector(cameras[0], null);
   }
 
-  const handleRecord = (camera: Camera, videoUri: string) => {
+  // This is a placeholder for a real recording function
+  const handleRecord = () => {
     toast({
-      title: 'Processing Recording...',
-      description: (
-        <div className="flex items-center">
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          <span>AI is summarizing your clip from {camera.name}.</span>
-        </div>
-      ),
-      duration: 60000, // Long duration, will be dismissed programmatically
-    });
-
-    startRecordingTransition(async () => {
-      const response = await summarizeRecordingAction({
-        videoDataUri: videoUri,
-        cameraName: camera.name,
-      });
-
-      if (response.success && response.data) {
-         const newRecording: Recording = {
-           id: `rec-${Date.now()}`,
-           timestamp: new Date().toISOString(),
-           videoDataUri: videoUri,
-           cameraName: camera.name,
-           ...response.data
-         };
-         
-         const existingRecordings: Recording[] = JSON.parse(localStorage.getItem('recordings') || '[]');
-         localStorage.setItem('recordings', JSON.stringify([...existingRecordings, newRecording]));
-
-         const newEvent: Event = {
-            id: `evt-${Date.now()}`,
-            timestamp: new Date().toISOString(),
-            type: 'Recording',
-            cameraName: camera.name,
-            description: `New clip saved: "${response.data.title}"`,
-            referenceId: newRecording.id,
-         };
-         const existingEvents: Event[] = JSON.parse(localStorage.getItem('events') || '[]');
-         localStorage.setItem('events', JSON.stringify([...existingEvents, newEvent]));
-
-         toast({
-           title: 'Recording Saved!',
-           description: `Clip from ${camera.name} is now available in Playback.`,
-         });
-
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Summarization Failed',
-          description: response.error,
-        });
-      }
+      title: 'Recording Started',
+      description: 'Simulating a 10-second clip recording.',
+      duration: 5000,
     });
   }
+  
+  const handleTimelineChange = (value: number[]) => {
+    setIsLive(value[0] === 100);
+  };
+
 
   const gridStyle = activeLayout ? {
     gridTemplateColumns: `repeat(${activeLayout.grid.cols}, minmax(0, 1fr))`,
@@ -225,46 +190,67 @@ export default function Dashboard() {
                   <Wand2 className="mr-0 md:mr-2 h-4 w-4"/>
                   <span className="hidden md:inline">Manage Layouts</span>
               </Button>
+               <Button variant="destructive" onClick={handleRecord}>
+                  <CircleDot className="mr-0 md:mr-2 h-4 w-4"/>
+                  <span className="hidden md:inline">Record</span>
+              </Button>
             </div>
           </header>
-          <div className="flex-1 p-4 bg-background/95 overflow-auto bg-grid-pattern">
-            {activeLayout && activeLayout.grid.cameras.length > 0 ? (
-                <div className="h-full w-full grid gap-4" style={gridStyle}>
-                {activeLayout.grid.cameras.map((cameraId, index) => {
-                    const camera = getCameraById(cameraId);
-                    return (
-                    <div key={cameraId ? `${cameraId}-${index}`: index} className="bg-transparent rounded-lg overflow-hidden min-h-[200px] group">
-                        {camera ? (
-                        <CameraFeed 
-                            camera={camera} 
-                            onFullscreen={setFullscreenCamera}
-                            onDetect={handleOpenDetector}
-                            onRecord={handleRecord}
-                        />
-                        ) : (
-                        <div className="h-full w-full flex items-center justify-center bg-muted/50 rounded-lg">
-                            <span className="text-muted-foreground text-sm">Empty Slot</span>
+          <div className="flex-1 p-4 bg-background/95 overflow-auto bg-grid-pattern flex flex-col">
+            {isLive ? (
+              <>
+                {activeLayout && activeLayout.grid.cameras.length > 0 ? (
+                    <div className="h-full w-full grid gap-4" style={gridStyle}>
+                    {activeLayout.grid.cameras.map((cameraId, index) => {
+                        const camera = getCameraById(cameraId);
+                        return (
+                        <div key={cameraId ? `${cameraId}-${index}`: index} className="bg-transparent rounded-lg overflow-hidden min-h-[200px] group">
+                            {camera ? (
+                            <CameraFeed 
+                                camera={camera} 
+                                onFullscreen={setFullscreenCamera}
+                                onDetect={handleOpenDetector}
+                            />
+                            ) : (
+                            <div className="h-full w-full flex items-center justify-center bg-muted/50 rounded-lg">
+                                <span className="text-muted-foreground text-sm">Empty Slot</span>
+                            </div>
+                            )}
                         </div>
-                        )}
+                        );
+                    })}
                     </div>
-                    );
-                })}
-                </div>
+                ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-center p-8 border-2 border-dashed rounded-lg bg-card">
+                        <Aperture className="h-16 w-16 text-primary mb-4" />
+                        <h2 className="text-2xl font-bold tracking-tight">Welcome to Argus Vision</h2>
+                        <p className="text-muted-foreground mt-2 max-w-md mx-auto">
+                            Your self-hosted surveillance hub. To get started, add your first camera feed.
+                        </p>
+                        <Button asChild className="mt-6">
+                            <Link href="/settings">
+                                <Settings className="mr-2 h-4 w-4" /> Add a Camera
+                            </Link>
+                        </Button>
+                    </div>
+                )}
+              </>
             ) : (
-                 <div className="flex flex-col items-center justify-center h-full text-center p-8 border-2 border-dashed rounded-lg bg-card">
-                    <Aperture className="h-16 w-16 text-primary mb-4" />
-                    <h2 className="text-2xl font-bold tracking-tight">Welcome to Argus Vision</h2>
-                    <p className="text-muted-foreground mt-2 max-w-md mx-auto">
-                        Your self-hosted surveillance hub. To get started, add your first camera feed.
-                    </p>
-                    <Button asChild className="mt-6">
-                        <Link href="/settings">
-                            <Settings className="mr-2 h-4 w-4" /> Add a Camera
-                        </Link>
-                    </Button>
+                <div className="h-full w-full">
+                    <Playback isDashboard={true} />
                 </div>
             )}
           </div>
+           <footer className="p-4 border-t shrink-0 bg-background flex items-center gap-4">
+                <Button variant={isLive ? "ghost" : "default"} onClick={() => setIsLive(false)} size="sm">
+                    <Play className="mr-2 h-4 w-4" />
+                    Playback
+                </Button>
+                <Slider defaultValue={[100]} max={100} step={1} className="flex-1" onValueChange={handleTimelineChange} />
+                <div className={`text-sm font-semibold px-3 py-1 rounded-md ${isLive ? 'bg-destructive text-destructive-foreground' : 'bg-muted text-muted-foreground'}`}>
+                    {isLive ? 'LIVE' : 'PLAYBACK'}
+                </div>
+            </footer>
         </main>
       </div>
       
@@ -279,3 +265,5 @@ export default function Dashboard() {
     </SidebarProvider>
   );
 }
+
+    

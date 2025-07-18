@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -8,8 +9,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { useToast } from '@/hooks/use-toast';
 import type { Recording } from '@/lib/types';
 import { ScrollArea } from './ui/scroll-area';
+import { getRecordings } from '@/lib/storage';
 
-export default function Playback() {
+interface PlaybackProps {
+    isDashboard?: boolean;
+}
+
+export default function Playback({ isDashboard = false }: PlaybackProps) {
     const [recordings, setRecordings] = useState<Recording[]>([]);
     const [selectedRecording, setSelectedRecording] = useState<Recording | null>(null);
     const [isPlayerOpen, setIsPlayerOpen] = useState(false);
@@ -17,10 +23,8 @@ export default function Playback() {
 
     useEffect(() => {
         try {
-            const storedRecordings = localStorage.getItem('recordings');
-            if (storedRecordings) {
-                setRecordings(JSON.parse(storedRecordings));
-            }
+            const storedRecordings = getRecordings();
+            setRecordings(storedRecordings);
         } catch (error) {
             console.error("Failed to load recordings from localStorage", error);
             toast({
@@ -36,17 +40,21 @@ export default function Playback() {
         setIsPlayerOpen(true);
     };
 
+    const mainContainerClasses = isDashboard ? "h-full w-full flex flex-col" : "h-full w-full p-4 md:p-6 flex flex-col";
+
     return (
-        <div className="h-full w-full p-4 md:p-6 flex flex-col">
-            <header className="flex items-center gap-4 mb-6 shrink-0 border-b pb-4">
-                <div className="bg-primary/10 p-3 rounded-lg">
-                    <ListVideo className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                    <h1 className="text-2xl font-bold tracking-tight">Playback</h1>
-                    <p className="text-muted-foreground">Review and watch recorded video clips.</p>
-                </div>
-            </header>
+        <div className={mainContainerClasses}>
+            {!isDashboard && (
+                <header className="flex items-center gap-4 mb-6 shrink-0 border-b pb-4">
+                    <div className="bg-primary/10 p-3 rounded-lg">
+                        <ListVideo className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                        <h1 className="text-2xl font-bold tracking-tight">Playback</h1>
+                        <p className="text-muted-foreground">Review and watch recorded video clips.</p>
+                    </div>
+                </header>
+            )}
             
             <div className="flex-grow overflow-hidden">
             {recordings.length > 0 ? (
@@ -83,7 +91,7 @@ export default function Playback() {
                     <ListVideo className="h-16 w-16 text-muted-foreground mb-4" />
                     <h2 className="text-xl font-semibold">No Recordings Found</h2>
                     <p className="text-muted-foreground mt-2">
-                        Go to the Live View and press the record button on a camera feed to create a clip.
+                        Use the Record button on the dashboard to create a clip.
                     </p>
                 </div>
             )}
@@ -107,3 +115,5 @@ export default function Playback() {
         </div>
     );
 }
+
+    
