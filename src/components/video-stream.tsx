@@ -74,24 +74,27 @@ export const VideoStream = forwardRef<{
                     // Using a public video stream for demo purposes
                     const demoVideoUrl = 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
                     
-                    const response = await fetch(demoVideoUrl);
-                    if (!response.ok) throw new Error('Network response was not ok');
-                    const videoBlob = await response.blob();
-                    const videoObjectUrl = URL.createObjectURL(videoBlob);
-                    
                     // To enable recording, we need a MediaStream.
                     // We'll play the video in a hidden element and capture its stream.
                     const sourceVideo = document.createElement('video');
-                    sourceVideo.src = videoObjectUrl;
+                    sourceVideo.src = demoVideoUrl;
                     sourceVideo.crossOrigin = 'anonymous';
                     sourceVideo.loop = true;
                     sourceVideo.muted = true;
+                    
+                    sourceVideo.onerror = () => {
+                        console.error("Error playing the source video.");
+                        setIsError(true);
+                    };
+
                     await sourceVideo.play();
                     
                     const stream = (sourceVideo as any).captureStream();
                     
-                    videoRef.current.srcObject = stream;
-                    videoRef.current.addEventListener('error', () => setIsError(true));
+                    if (videoRef.current) {
+                        videoRef.current.srcObject = stream;
+                        videoRef.current.addEventListener('error', () => setIsError(true));
+                    }
 
                 } catch (e) {
                     console.error("Failed to setup video stream:", e);
