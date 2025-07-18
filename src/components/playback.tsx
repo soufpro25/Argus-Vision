@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlayCircle, ListVideo } from 'lucide-react';
+import { PlayCircle, ListVideo, Film } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import type { Recording } from '@/lib/types';
@@ -40,8 +40,8 @@ export default function Playback({ isDashboard = false, recordings: propRecordin
     return (
         <div className={mainContainerClasses}>
             {!isDashboard && (
-                <header className="flex items-center gap-4 mb-6 shrink-0 border-b pb-4">
-                    <div className="bg-primary/10 p-3 rounded-lg">
+                <header className="flex items-center gap-4 mb-6 shrink-0">
+                    <div className="bg-primary/10 p-3 rounded-lg border border-primary/20">
                         <ListVideo className="h-6 w-6 text-primary" />
                     </div>
                     <div>
@@ -82,8 +82,8 @@ export default function Playback({ isDashboard = false, recordings: propRecordin
                     </div>
                 </ScrollArea>
             ) : (
-                <div className="flex flex-col items-center justify-center h-full text-center p-8 border-2 border-dashed rounded-lg bg-card">
-                    <ListVideo className="h-16 w-16 text-muted-foreground mb-4" />
+                <div className="flex flex-col items-center justify-center h-full text-center p-8 border-2 border-dashed rounded-lg bg-card/50">
+                    <Film className="h-16 w-16 text-muted-foreground mb-4" />
                     <h2 className="text-xl font-semibold">No Recordings Found</h2>
                     <p className="text-muted-foreground mt-2">
                         Recordings will appear here as they are saved automatically or manually.

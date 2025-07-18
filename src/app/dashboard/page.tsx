@@ -3,7 +3,7 @@
 
 import { useState, useTransition, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Aperture, History, LayoutGrid, ScanSearch, Settings, Wand2, Loader2, ListVideo, CircleDot, Play, LogOut } from 'lucide-react';
+import { Aperture, History, LayoutGrid, ScanSearch, Settings, Wand2, Loader2, ListVideo, CircleDot, Play, LogOut, Video } from 'lucide-react';
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger
 } from '@/components/ui/sidebar';
@@ -20,6 +20,7 @@ import { Slider } from '@/components/ui/slider';
 import Playback from '@/components/playback';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
+import { Card } from '@/components/ui/card';
 
 const RECORDING_INTERVAL = 15 * 60 * 1000; // 15 minutes
 
@@ -215,7 +216,7 @@ export default function Dashboard() {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen bg-background">
+      <div className="flex min-h-screen bg-background text-foreground">
         <Sidebar>
           <SidebarHeader>
             <div className="flex items-center gap-2">
@@ -341,8 +342,8 @@ export default function Dashboard() {
                     })}
                     </div>
                 ) : (
-                    <div className="flex flex-col items-center justify-center h-full text-center p-8 border-2 border-dashed rounded-lg bg-card">
-                        <Aperture className="h-16 w-16 text-primary mb-4" />
+                    <Card className="flex flex-col items-center justify-center h-full text-center p-8 border-2 border-dashed rounded-lg bg-card border-border">
+                        <Video className="h-16 w-16 text-primary mb-4" />
                         <h2 className="text-2xl font-bold tracking-tight">Welcome to Argus Vision</h2>
                         {user?.role === 'admin' ? (
                             <>
@@ -360,7 +361,7 @@ export default function Dashboard() {
                                 No cameras have been configured. Please contact an administrator.
                             </p>
                         )}
-                    </div>
+                    </Card>
                 )}
               </>
             ) : (
@@ -369,7 +370,7 @@ export default function Dashboard() {
                 </div>
             )}
           </div>
-           <footer className="p-4 border-t shrink-0 bg-background flex items-center gap-4">
+           <footer className="p-4 border-t shrink-0 bg-card flex items-center gap-4">
                 <Button variant={isLive ? "ghost" : "default"} onClick={() => setIsLive(false)} size="sm">
                     <Play className="mr-2 h-4 w-4" />
                     Playback

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -42,8 +43,8 @@ export default function Events() {
 
     return (
         <div className="h-full w-full p-4 md:p-6 flex flex-col">
-            <header className="flex items-center gap-4 mb-6 shrink-0 border-b pb-4">
-                <div className="bg-primary/10 p-3 rounded-lg">
+            <header className="flex items-center gap-4 mb-6 shrink-0">
+                <div className="bg-primary/10 p-3 rounded-lg border border-primary/20">
                     <History className="h-6 w-6 text-primary" />
                 </div>
                 <div>
@@ -78,7 +79,7 @@ export default function Events() {
                         </div>
                     </ScrollArea>
                 ) : (
-                    <div className="flex flex-col items-center justify-center h-full text-center p-8 border-2 border-dashed rounded-lg bg-card">
+                    <div className="flex flex-col items-center justify-center h-full text-center p-8 border-2 border-dashed rounded-lg bg-card/50">
                         <History className="h-16 w-16 text-muted-foreground mb-4" />
                         <h2 className="text-xl font-semibold">No Events Found</h2>
                         <p className="text-muted-foreground mt-2">
