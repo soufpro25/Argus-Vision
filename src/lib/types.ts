@@ -30,3 +30,12 @@ export interface Recording {
     summary: string;
     videoDataUri: string;
 }
+
+export interface Event {
+  id: string;
+  timestamp: string;
+  type: 'Recording' | 'Object Detection';
+  cameraName: string;
+  description: string;
+  referenceId?: string; // e.g., recording ID
+}
