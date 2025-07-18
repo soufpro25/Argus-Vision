@@ -23,22 +23,12 @@ export default function Playback({ isDashboard = false, recordings: propRecordin
     const { toast } = useToast();
 
     useEffect(() => {
-        if (!isDashboard) {
-            try {
-                const storedRecordings = getRecordings();
-                setRecordings(storedRecordings);
-            } catch (error) {
-                console.error("Failed to load recordings from localStorage", error);
-                toast({
-                    variant: 'destructive',
-                    title: 'Error',
-                    description: 'Could not load past recordings.',
-                });
-            }
-        } else {
+        if (isDashboard) {
             setRecordings(propRecordings);
+        } else {
+             setRecordings(getRecordings());
         }
-    }, [toast, isDashboard, propRecordings]);
+    }, [isDashboard, propRecordings]);
 
     const handlePlayRecording = (recording: Recording) => {
         setSelectedRecording(recording);
@@ -120,5 +110,3 @@ export default function Playback({ isDashboard = false, recordings: propRecordin
         </div>
     );
 }
-
-    
