@@ -11,6 +11,7 @@ import { Aperture, History, LayoutGrid, ListVideo, LogOut, ScanSearch, Settings 
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
 
 export default function PlaybackPage() {
   const [recordings, setRecordings] = useState<Recording[]>([]);
