@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,7 @@ import { suggestLayoutAction } from '@/app/actions';
 import { Loader2, Wand2, AlertCircle } from 'lucide-react';
 import type { Camera, Layout } from '@/lib/types';
 import { useAuth } from '@/hooks/use-auth';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 
 interface LayoutManagerProps {
   open: boolean;
@@ -22,12 +23,23 @@ interface LayoutManagerProps {
 
 export function LayoutManager({ open, onOpenChange, cameras, onLayoutSave }: LayoutManagerProps) {
   const [isPending, startTransition] = useTransition();
-  const [cameraDescriptions, setCameraDescriptions] = useState<Pick<Camera, 'id' | 'description'>[]>(cameras.map(c => ({id: c.id, description: c.description})));
+  const [cameraDescriptions, setCameraDescriptions] = useState<Camera[]>(cameras);
   const [suggestedLayout, setSuggestedLayout] = useState<{ layout: string[], reasoning: string } | null>(null);
   const [layoutName, setLayoutName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
+  
+  const groupedCameras = useMemo(() => {
+    return cameraDescriptions.reduce((acc, camera) => {
+        const serverKey = camera.server || 'Unassigned';
+        if (!acc[serverKey]) {
+            acc[serverKey] = [];
+        }
+        acc[serverKey].push(camera);
+        return acc;
+    }, {} as Record<string, Camera[]>);
+  }, [cameraDescriptions]);
 
   if (user?.role !== 'admin') return null;
 
@@ -39,7 +51,13 @@ export function LayoutManager({ open, onOpenChange, cameras, onLayoutSave }: Lay
     setError(null);
     setSuggestedLayout(null);
     startTransition(async () => {
-      const response = await suggestLayoutAction(cameraDescriptions);
+      const cameraDetails = cameraDescriptions.map(c => ({
+          cameraId: c.id,
+          locationDescription: c.description,
+          server: c.server || 'Unassigned',
+      }));
+
+      const response = await suggestLayoutAction(cameraDetails);
       if (response.success && response.data) {
         setSuggestedLayout({ layout: response.data.suggestedLayout, reasoning: response.data.reasoning });
         setLayoutName('AI Suggested Layout');
@@ -85,24 +103,33 @@ export function LayoutManager({ open, onOpenChange, cameras, onLayoutSave }: Lay
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>AI Layout Manager</DialogTitle>
           <DialogDescription>
             Describe your camera locations and let AI suggest an optimal grid layout.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto pr-4">
-            {cameraDescriptions.map(cam => (
-                <div key={cam.id} className="space-y-2">
-                    <Label htmlFor={`desc-${cam.id}`}>{cameras.find(c => c.id === cam.id)?.name}</Label>
-                    <Textarea
-                        id={`desc-${cam.id}`}
-                        value={cam.description}
-                        onChange={e => handleDescriptionChange(cam.id, e.target.value)}
-                        placeholder="e.g., 'Covers the main entrance and porch'"
-                    />
-                </div>
+        <div className="grid gap-6 py-4 max-h-[60vh] overflow-y-auto pr-4">
+            {Object.entries(groupedCameras).map(([server, cams]) => (
+                <Card key={server}>
+                    <CardHeader>
+                        <CardTitle>{server}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {cams.map(cam => (
+                             <div key={cam.id} className="space-y-2">
+                                <Label htmlFor={`desc-${cam.id}`}>{cam.name}</Label>
+                                <Textarea
+                                    id={`desc-${cam.id}`}
+                                    value={cam.description}
+                                    onChange={e => handleDescriptionChange(cam.id, e.target.value)}
+                                    placeholder="e.g., 'Covers the main entrance and porch'"
+                                />
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
             ))}
         </div>
 

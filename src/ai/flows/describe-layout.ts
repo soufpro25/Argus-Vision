@@ -21,8 +21,9 @@ const DescribeLayoutInputSchema = z.object({
         .describe(
           'A natural language description of the camera location, including key areas visible in the camera feed.'
         ),
+      server: z.string().optional().describe('The server or group the camera belongs to.'),
     })
-  ).describe('An array of camera descriptions, each including an ID and a location description.'),
+  ).describe('An array of camera descriptions, each including an ID, a location description, and an optional server.'),
 });
 export type DescribeLayoutInput = z.infer<typeof DescribeLayoutInputSchema>;
 
@@ -50,21 +51,22 @@ const prompt = ai.definePrompt({
   output: {schema: DescribeLayoutOutputSchema},
   prompt: `You are an AI assistant that suggests camera layouts based on their location descriptions. The goal is to provide a logical and intuitive arrangement of camera feeds for the user.
 
+First, try to group cameras by the server they belong to. Then, within each server group, arrange the cameras logically based on their location descriptions.
+
 Given the following camera descriptions:
 
 {{#each cameraDescriptions}}
 - Camera ID: {{this.cameraId}}
-  Location Description: {{this.locationDescription}}
+  - Server: {{this.server}}
+  - Location Description: {{this.locationDescription}}
 {{/each}}
 
-Suggest a layout (an ordered list of camera IDs) and explain your reasoning. Consider the relationships between camera locations (e.g., adjacency, overlap in coverage, logical flow of movement).
-
-Output the layout as an array of camera IDs and provide a clear explanation of your reasoning.
+Suggest a layout (an ordered list of camera IDs) and explain your reasoning. Consider the relationships between camera locations (e.g., adjacency, overlap in coverage, logical flow of movement) and the server groupings.
 
 Example Output:
 {
-  "suggestedLayout": ["camera1", "camera3", "camera2"],
-  "reasoning": "Camera 1 covers the entrance, Camera 3 covers the hallway connected to the entrance, and Camera 2 covers the living room adjacent to the hallway."
+  "suggestedLayout": ["cam-server1-entry", "cam-server1-hall", "cam-server2-lobby", "cam-server2-office"],
+  "reasoning": "The layout is grouped by server. For Server 1, Camera 'cam-server1-entry' covers the entrance, followed by 'cam-server1-hall' which covers the connected hallway. For Server 2, 'cam-server2-lobby' is first as it covers the main lobby, followed by the adjacent office."
 }
 `,
 });

@@ -21,6 +21,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, Sid
 import { Aperture, History, LayoutGrid, ListVideo, LogOut, ScanSearch, Settings } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
+import { Badge } from '@/components/ui/badge';
 
 const cameraSchema = z.object({
   id: z.string().optional(),
@@ -28,6 +29,7 @@ const cameraSchema = z.object({
   description: z.string().min(1, 'Description is required'),
   streamUrl: z.string().min(1, 'Stream URL is required').url('Must be a valid URL'),
   thumbnailUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')),
+  server: z.string().optional(),
 });
 
 type CameraFormValues = z.infer<typeof cameraSchema>;
@@ -58,6 +60,7 @@ export default function CamerasSettingsPage() {
             description: '',
             streamUrl: '',
             thumbnailUrl: '',
+            server: '',
         },
     });
 
@@ -94,7 +97,7 @@ export default function CamerasSettingsPage() {
         if (camera) {
             form.reset(camera);
         } else {
-            form.reset({ name: '', description: '', streamUrl: '', thumbnailUrl: '' });
+            form.reset({ name: '', description: '', streamUrl: '', thumbnailUrl: '', server: '' });
         }
         setIsDialogOpen(true);
     };
@@ -220,7 +223,10 @@ export default function CamerasSettingsPage() {
                                                 className="aspect-video w-[120px] rounded-md object-cover mr-4 bg-muted"
                                             />
                                             <div className="flex-grow">
-                                                <p className="font-semibold">{camera.name}</p>
+                                                <p className="font-semibold flex items-center gap-2">
+                                                    {camera.name}
+                                                    {camera.server && <Badge variant="secondary">{camera.server}</Badge>}
+                                                </p>
                                                 <p className="text-sm text-muted-foreground truncate">{camera.description}</p>
                                                 <p className="text-xs text-muted-foreground/50 font-mono truncate">{camera.streamUrl}</p>
                                             </div>
@@ -299,6 +305,19 @@ export default function CamerasSettingsPage() {
                                                     <FormLabel>Thumbnail URL (Optional)</FormLabel>
                                                     <FormControl>
                                                         <Input placeholder="https://placehold.co/800x600.png" {...field} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="server"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Server Name (Optional)</FormLabel>
+                                                    <FormControl>
+                                                        <Input placeholder="e.g., Server 1" {...field} />
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>

@@ -5,13 +5,9 @@ import { smartObjectDetection, type SmartObjectDetectionInput } from '@/ai/flows
 import { summarizeRecording, type SummarizeRecordingInput } from '@/ai/flows/summarize-recording';
 import type { Camera } from '@/lib/types';
 
-export async function suggestLayoutAction(cameras: Pick<Camera, 'id' | 'description'>[]) {
+export async function suggestLayoutAction(cameras: { cameraId: string, locationDescription: string, server?: string }[]) {
   try {
-    const cameraDescriptions = cameras.map(cam => ({
-      cameraId: cam.id,
-      locationDescription: cam.description,
-    }));
-    const result = await describeLayout({ cameraDescriptions });
+    const result = await describeLayout({ cameraDescriptions: cameras });
     return { success: true, data: result };
   } catch (error) {
     console.error('Error suggesting layout:', error);
