@@ -9,16 +9,18 @@ interface VideoStreamProps {
   thumbnailUrl: string;
 }
 
-export const VideoStream = forwardRef<{ 
+export interface VideoStreamRef {
   captureFrame: () => string | null;
-}, VideoStreamProps>(
+}
+
+export const VideoStream = forwardRef<VideoStreamRef, VideoStreamProps>(
   ({ streamUrl, thumbnailUrl }, ref) => {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isError, setIsError] = useState(false);
 
     useImperativeHandle(ref, () => ({
       captureFrame: () => {
-        if (videoRef.current && !isError) {
+        if (videoRef.current && !isError && videoRef.current.readyState >= 2) {
           const canvas = document.createElement('canvas');
           canvas.width = videoRef.current.videoWidth;
           canvas.height = videoRef.current.videoHeight;
@@ -28,7 +30,8 @@ export const VideoStream = forwardRef<{
             return canvas.toDataURL('image/jpeg');
           }
         }
-        return null;
+        // Fallback to thumbnail if video isn't ready or has failed
+        return thumbnailUrl;
       },
     }));
     
@@ -38,6 +41,8 @@ export const VideoStream = forwardRef<{
         async function setupVideoStream() {
             if (videoRef.current) {
                 try {
+                    // For demo purposes, we use a public MP4 file.
+                    // In a real scenario, this would be an HLS or DASH stream URL.
                     const demoVideoUrl = 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
                     
                     const sourceVideo = document.createElement('video');
@@ -46,18 +51,24 @@ export const VideoStream = forwardRef<{
                     sourceVideo.loop = true;
                     sourceVideo.muted = true;
                     
-                    sourceVideo.onerror = () => {
-                        console.error("Error playing the source video.");
+                    sourceVideo.onerror = (e) => {
+                        console.error("Error playing the source video.", e);
                         setIsError(true);
                     };
-
+                    
+                    // Wait for the source video to be playable
                     await sourceVideo.play();
                     
+                    // Capture the stream from the source video
                     const stream = (sourceVideo as any).captureStream();
                     
                     if (videoRef.current) {
                         videoRef.current.srcObject = stream;
-                        videoRef.current.addEventListener('error', () => setIsError(true));
+                        await videoRef.current.play();
+                        videoRef.current.addEventListener('error', (e) => {
+                            console.error('Error with video element', e);
+                            setIsError(true);
+                        });
                     }
 
                 } catch (e) {

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useTransition, useEffect } from 'react';
+import { useState, useTransition, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Aperture, History, LayoutGrid, ScanSearch, Settings, Wand2, Loader2, ListVideo, CircleDot, Play } from 'lucide-react';
 import {
@@ -10,7 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { Camera, Layout, Recording, Event } from '@/lib/types';
-import { CameraFeed, FullscreenView } from '@/components/camera-feed';
+import { CameraFeed, FullscreenView, type CameraFeedHandle } from '@/components/camera-feed';
 import { LayoutManager } from '@/components/layout-manager';
 import { ObjectDetectionPanel } from '@/components/object-detection-panel';
 import { useToast } from '@/hooks/use-toast';
@@ -18,6 +18,8 @@ import { summarizeRecordingAction } from '../actions';
 import { getCameras, getLayouts, getRecordings } from '@/lib/storage';
 import { Slider } from '@/components/ui/slider';
 import Playback from '@/components/playback';
+
+const RECORDING_INTERVAL = 15 * 60 * 1000; // 15 minutes
 
 export default function Dashboard() {
   const [cameras, setCameras] = useState<Camera[]>([]);
@@ -31,6 +33,8 @@ export default function Dashboard() {
   const [isRecordingPending, startRecordingTransition] = useTransition();
   const [isLive, setIsLive] = useState(true);
   const { toast } = useToast();
+
+  const cameraFeedRefs = useRef<Map<string, CameraFeedHandle | null>>(new Map());
 
   useEffect(() => {
     const loadedCameras = getCameras();
@@ -57,6 +61,101 @@ export default function Dashboard() {
       setLayouts([defaultLayout]);
     }
   }, []);
+
+  const handleManualRecord = async () => {
+    const firstCamera = cameras[0];
+    if (!firstCamera) {
+      toast({
+        variant: 'destructive',
+        title: 'No Camera Available',
+        description: 'Please add a camera in settings to start recording.',
+      });
+      return;
+    }
+    
+    toast({
+      title: 'Starting Manual Recording...',
+      description: `Preparing to record a clip from ${firstCamera.name}.`,
+    });
+    
+    await processRecording(firstCamera);
+  };
+  
+  const processRecording = async (camera: Camera) => {
+    const cameraRef = cameraFeedRefs.current.get(camera.id);
+    const frame = cameraRef?.captureFrame();
+
+    if (!frame) {
+        console.error(`Could not capture frame for camera: ${camera.name}`);
+        toast({
+          variant: 'destructive',
+          title: 'Recording Failed',
+          description: `Could not capture a frame from ${camera.name}.`,
+        });
+        return;
+    }
+
+    startRecordingTransition(async () => {
+      const response = await summarizeRecordingAction({
+        videoDataUri: frame,
+        cameraName: camera.name,
+      });
+
+      if (response.success && response.data) {
+        const newRecording: Recording = {
+          id: `rec-${Date.now()}`,
+          timestamp: new Date().toISOString(),
+          videoDataUri: frame,
+          cameraName: camera.name,
+          ...response.data
+        };
+        
+        const existingRecordings = getRecordings();
+        const updatedRecordings = [...existingRecordings, newRecording];
+        localStorage.setItem('recordings', JSON.stringify(updatedRecordings));
+        setRecordings(updatedRecordings);
+
+        const newEvent: Event = {
+            id: `evt-${Date.now()}`,
+            timestamp: new Date().toISOString(),
+            type: 'Recording',
+            cameraName: camera.name,
+            description: `Clip saved: ${response.data.title}`,
+            referenceId: newRecording.id,
+        }
+        const existingEvents = JSON.parse(localStorage.getItem('events') || '[]');
+        localStorage.setItem('events', JSON.stringify([...existingEvents, newEvent]));
+
+        toast({
+          title: 'Recording Saved!',
+          description: `Clip from ${camera.name} is now available in Playback.`,
+        });
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Summarization Failed',
+          description: response.error,
+        });
+      }
+    });
+  }
+  
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      if (cameras.length > 0) {
+        console.log('Kicking off automated 15-minute recording...');
+        toast({
+            title: 'Automated Recording',
+            description: `Saving a scheduled clip from ${cameras[0].name}.`
+        });
+        processRecording(cameras[0]);
+      }
+    }, RECORDING_INTERVAL);
+
+    // Clear interval on component unmount
+    return () => clearInterval(intervalId);
+  }, [cameras]);
+  
 
   const handleLayoutChange = (layoutId: string) => {
     const newLayout = layouts.find(l => l.id === layoutId);
@@ -90,15 +189,6 @@ export default function Dashboard() {
     handleOpenDetector(cameras[0], null);
   }
 
-  // This is a placeholder for a real recording function
-  const handleRecord = () => {
-    toast({
-      title: 'Recording Started',
-      description: 'Simulating a 10-second clip recording.',
-      duration: 5000,
-    });
-  }
-  
   const handleTimelineChange = (value: number[]) => {
     setIsLive(value[0] === 100);
   };
@@ -190,9 +280,9 @@ export default function Dashboard() {
                   <Wand2 className="mr-0 md:mr-2 h-4 w-4"/>
                   <span className="hidden md:inline">Manage Layouts</span>
               </Button>
-               <Button variant="destructive" onClick={handleRecord}>
-                  <CircleDot className="mr-0 md:mr-2 h-4 w-4"/>
-                  <span className="hidden md:inline">Record</span>
+               <Button variant="destructive" onClick={handleManualRecord} disabled={isRecordingPending}>
+                  {isRecordingPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CircleDot className="mr-0 md:mr-2 h-4 w-4"/>}
+                  <span className="hidden md:inline">{isRecordingPending ? 'Recording...' : 'Record'}</span>
               </Button>
             </div>
           </header>
@@ -207,6 +297,7 @@ export default function Dashboard() {
                         <div key={cameraId ? `${cameraId}-${index}`: index} className="bg-transparent rounded-lg overflow-hidden min-h-[200px] group">
                             {camera ? (
                             <CameraFeed 
+                                ref={(el) => cameraFeedRefs.current.set(camera.id, el)}
                                 camera={camera} 
                                 onFullscreen={setFullscreenCamera}
                                 onDetect={handleOpenDetector}
@@ -237,7 +328,7 @@ export default function Dashboard() {
               </>
             ) : (
                 <div className="h-full w-full">
-                    <Playback isDashboard={true} />
+                    <Playback isDashboard={true} recordings={recordings} />
                 </div>
             )}
           </div>

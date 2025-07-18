@@ -13,27 +13,32 @@ import { getRecordings } from '@/lib/storage';
 
 interface PlaybackProps {
     isDashboard?: boolean;
+    recordings: Recording[];
 }
 
-export default function Playback({ isDashboard = false }: PlaybackProps) {
-    const [recordings, setRecordings] = useState<Recording[]>([]);
+export default function Playback({ isDashboard = false, recordings: propRecordings }: PlaybackProps) {
+    const [recordings, setRecordings] = useState<Recording[]>(propRecordings || []);
     const [selectedRecording, setSelectedRecording] = useState<Recording | null>(null);
     const [isPlayerOpen, setIsPlayerOpen] = useState(false);
     const { toast } = useToast();
 
     useEffect(() => {
-        try {
-            const storedRecordings = getRecordings();
-            setRecordings(storedRecordings);
-        } catch (error) {
-            console.error("Failed to load recordings from localStorage", error);
-            toast({
-                variant: 'destructive',
-                title: 'Error',
-                description: 'Could not load past recordings.',
-            });
+        if (!isDashboard) {
+            try {
+                const storedRecordings = getRecordings();
+                setRecordings(storedRecordings);
+            } catch (error) {
+                console.error("Failed to load recordings from localStorage", error);
+                toast({
+                    variant: 'destructive',
+                    title: 'Error',
+                    description: 'Could not load past recordings.',
+                });
+            }
+        } else {
+            setRecordings(propRecordings);
         }
-    }, [toast]);
+    }, [toast, isDashboard, propRecordings]);
 
     const handlePlayRecording = (recording: Recording) => {
         setSelectedRecording(recording);
@@ -91,7 +96,7 @@ export default function Playback({ isDashboard = false }: PlaybackProps) {
                     <ListVideo className="h-16 w-16 text-muted-foreground mb-4" />
                     <h2 className="text-xl font-semibold">No Recordings Found</h2>
                     <p className="text-muted-foreground mt-2">
-                        Use the Record button on the dashboard to create a clip.
+                        Recordings will appear here as they are saved automatically or manually.
                     </p>
                 </div>
             )}
