@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import Link from 'next/link';
 import { Aperture, History, LayoutGrid, ScanSearch, Settings, Wand2, Loader2, ListVideo } from 'lucide-react';
 import {
@@ -15,17 +15,41 @@ import { LayoutManager } from '@/components/layout-manager';
 import { ObjectDetectionPanel } from '@/components/object-detection-panel';
 import { useToast } from '@/hooks/use-toast';
 import { summarizeRecordingAction } from '../actions';
+import { getCameras, getLayouts } from '@/lib/storage';
 
 export default function Dashboard() {
-  const [cameras, setCameras] = useState<Camera[]>(mockCameras);
-  const [layouts, setLayouts] = useState<Layout[]>(mockLayouts);
-  const [activeLayout, setActiveLayout] = useState<Layout>(mockLayouts[0]);
+  const [cameras, setCameras] = useState<Camera[]>([]);
+  const [layouts, setLayouts] = useState<Layout[]>([]);
+  const [activeLayout, setActiveLayout] = useState<Layout | null>(null);
   const [fullscreenCamera, setFullscreenCamera] = useState<Camera | null>(null);
   const [isLayoutManagerOpen, setIsLayoutManagerOpen] = useState(false);
   const [isObjectDetectorOpen, setIsObjectDetectorOpen] = useState(false);
   const [detectionData, setDetectionData] = useState<{camera: Camera, frame: string | null} | null>(null);
   const [isRecordingPending, startRecordingTransition] = useTransition();
   const { toast } = useToast();
+
+  useEffect(() => {
+    const loadedCameras = getCameras();
+    const loadedLayouts = getLayouts();
+    setCameras(loadedCameras);
+    setLayouts(loadedLayouts);
+    if (loadedLayouts.length > 0) {
+      setActiveLayout(loadedLayouts[0]);
+    } else if (loadedCameras.length > 0) {
+      // Create a default layout if none exist
+      const defaultLayout: Layout = {
+        id: 'layout-default',
+        name: 'Default View',
+        grid: {
+          rows: 1,
+          cols: 1,
+          cameras: [loadedCameras[0].id]
+        }
+      };
+      setActiveLayout(defaultLayout);
+      setLayouts([defaultLayout]);
+    }
+  }, []);
 
   const handleLayoutChange = (layoutId: string) => {
     const newLayout = layouts.find(l => l.id === layoutId);
@@ -35,7 +59,9 @@ export default function Dashboard() {
   };
 
   const handleSaveLayout = (newLayout: Layout) => {
-    setLayouts(prev => [...prev, newLayout]);
+    const newLayouts = [...layouts, newLayout];
+    setLayouts(newLayouts);
+    localStorage.setItem('layouts', JSON.stringify(newLayouts));
     setActiveLayout(newLayout);
     setIsLayoutManagerOpen(false);
   };
@@ -46,6 +72,14 @@ export default function Dashboard() {
   }
 
   const handleOpenDetectorForFirstCamera = () => {
+    if (cameras.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'No Cameras',
+        description: 'Please add a camera in Settings first.'
+      });
+      return;
+    }
     // This is a fallback for the sidebar button. It won't have a frame.
     handleOpenDetector(cameras[0], null);
   }
@@ -106,10 +140,10 @@ export default function Dashboard() {
     });
   }
 
-  const gridStyle = {
+  const gridStyle = activeLayout ? {
     gridTemplateColumns: `repeat(${activeLayout.grid.cols}, minmax(0, 1fr))`,
     gridTemplateRows: `repeat(${activeLayout.grid.rows}, minmax(0, auto))`,
-  };
+  } : {};
   
   const getCameraById = (id: string | null): Camera | undefined => cameras.find(c => c.id === id);
 
@@ -162,10 +196,12 @@ export default function Dashboard() {
           <SidebarFooter>
             <SidebarMenu>
                  <SidebarMenuItem>
-                    <SidebarMenuButton tooltip="Settings" onClick={() => toast({title: "Coming Soon!", description: "Settings will be available in a future update."})}>
-                        <Settings/>
-                        <span className="group-data-[collapsible=icon]:hidden">Settings</span>
-                    </SidebarMenuButton>
+                    <Link href="/settings" className="w-full">
+                        <SidebarMenuButton tooltip="Settings">
+                            <Settings/>
+                            <span className="group-data-[collapsible=icon]:hidden">Settings</span>
+                        </SidebarMenuButton>
+                    </Link>
                 </SidebarMenuItem>
             </SidebarMenu>
           </SidebarFooter>
@@ -174,9 +210,9 @@ export default function Dashboard() {
         <main className="flex-1 flex flex-col">
           <header className="flex items-center justify-between p-4 border-b gap-4 shrink-0">
             <SidebarTrigger />
-            <h2 className="text-xl font-semibold whitespace-nowrap hidden sm:block">{activeLayout.name}</h2>
+            <h2 className="text-xl font-semibold whitespace-nowrap hidden sm:block">{activeLayout?.name ?? 'Live View'}</h2>
             <div className="flex items-center gap-2 ml-auto">
-              <Select value={activeLayout.id} onValueChange={handleLayoutChange}>
+              <Select value={activeLayout?.id} onValueChange={handleLayoutChange} disabled={layouts.length === 0}>
                   <SelectTrigger className="w-[150px] md:w-[200px]">
                       <SelectValue placeholder="Select a layout" />
                   </SelectTrigger>
@@ -193,27 +229,37 @@ export default function Dashboard() {
             </div>
           </header>
           <div className="flex-1 p-4 bg-background/90 overflow-auto">
-            <div className="h-full w-full grid gap-4" style={gridStyle}>
-              {activeLayout.grid.cameras.map((cameraId, index) => {
-                const camera = getCameraById(cameraId);
-                return (
-                  <div key={cameraId ? `${cameraId}-${index}`: index} className="bg-card rounded-lg overflow-hidden min-h-[200px] group">
-                    {camera ? (
-                      <CameraFeed 
-                        camera={camera} 
-                        onFullscreen={setFullscreenCamera}
-                        onDetect={handleOpenDetector}
-                        onRecord={handleRecord}
-                      />
-                    ) : (
-                      <div className="h-full w-full flex items-center justify-center bg-muted/50 rounded-lg">
-                        <span className="text-muted-foreground text-sm">Empty Slot</span>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+            {activeLayout && activeLayout.grid.cameras.length > 0 ? (
+                <div className="h-full w-full grid gap-4" style={gridStyle}>
+                {activeLayout.grid.cameras.map((cameraId, index) => {
+                    const camera = getCameraById(cameraId);
+                    return (
+                    <div key={cameraId ? `${cameraId}-${index}`: index} className="bg-card rounded-lg overflow-hidden min-h-[200px] group">
+                        {camera ? (
+                        <CameraFeed 
+                            camera={camera} 
+                            onFullscreen={setFullscreenCamera}
+                            onDetect={handleOpenDetector}
+                            onRecord={handleRecord}
+                        />
+                        ) : (
+                        <div className="h-full w-full flex items-center justify-center bg-muted/50 rounded-lg">
+                            <span className="text-muted-foreground text-sm">Empty Slot</span>
+                        </div>
+                        )}
+                    </div>
+                    );
+                })}
+                </div>
+            ) : (
+                 <div className="flex flex-col items-center justify-center h-full text-center p-8 border-2 border-dashed rounded-lg">
+                    <LayoutGrid className="h-16 w-16 text-muted-foreground mb-4" />
+                    <h2 className="text-xl font-semibold">Welcome to Argus Vision</h2>
+                    <p className="text-muted-foreground mt-2">
+                        To get started, add a camera in the <Link href="/settings" className="text-primary underline">Settings</Link> page.
+                    </p>
+                </div>
+            )}
           </div>
         </main>
       </div>
