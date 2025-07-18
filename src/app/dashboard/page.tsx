@@ -3,7 +3,7 @@
 
 import { useState, useTransition, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Aperture, History, LayoutGrid, ScanSearch, Settings, Wand2, Loader2, ListVideo, CircleDot, Play, LogOut, Video } from 'lucide-react';
+import { Aperture, History, LayoutGrid, Settings, Wand2, Loader2, ListVideo, CircleDot, Play, LogOut, Video } from 'lucide-react';
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger
 } from '@/components/ui/sidebar';
@@ -12,7 +12,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import type { Camera, Layout, Recording, Event } from '@/lib/types';
 import { CameraFeed, FullscreenView, type CameraFeedHandle } from '@/components/camera-feed';
 import { LayoutManager } from '@/components/layout-manager';
-import { ObjectDetectionPanel } from '@/components/object-detection-panel';
 import { useToast } from '@/hooks/use-toast';
 import { summarizeRecordingAction } from '../actions';
 import { getCameras, getLayouts, getRecordings } from '@/lib/storage';
@@ -31,8 +30,6 @@ export default function Dashboard() {
   const [activeLayout, setActiveLayout] = useState<Layout | null>(null);
   const [fullscreenCamera, setFullscreenCamera] = useState<Camera | null>(null);
   const [isLayoutManagerOpen, setIsLayoutManagerOpen] = useState(false);
-  const [isObjectDetectorOpen, setIsObjectDetectorOpen] = useState(false);
-  const [detectionData, setDetectionData] = useState<{camera: Camera, frame: string | null} | null>(null);
   const [isRecordingPending, startRecordingTransition] = useTransition();
   const [isLive, setIsLive] = useState(true);
   const { toast } = useToast();
@@ -192,23 +189,6 @@ export default function Dashboard() {
     }
   };
   
-  const handleOpenDetector = (camera: Camera, frame: string | null) => {
-      setDetectionData({ camera, frame });
-      setIsObjectDetectorOpen(true);
-  }
-
-  const handleOpenDetectorForFirstCamera = () => {
-    if (cameras.length === 0) {
-      toast({
-        variant: 'destructive',
-        title: 'No Cameras',
-        description: 'Please add a camera in Settings first.'
-      });
-      return;
-    }
-    handleOpenDetector(cameras[0], null);
-  }
-
   const handleTimelineChange = (value: number[]) => {
     setIsLive(value[0] === 100);
   };
@@ -250,12 +230,6 @@ export default function Dashboard() {
                        <span className="group-data-[collapsible=icon]:hidden">Playback</span>
                     </SidebarMenuButton>
                   </Link>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                    <SidebarMenuButton tooltip="Object Detection" onClick={handleOpenDetectorForFirstCamera}>
-                       <ScanSearch />
-                       <span className="group-data-[collapsible=icon]:hidden">Object Detection</span>
-                    </SidebarMenuButton>
                 </SidebarMenuItem>
                  <SidebarMenuItem>
                     <Link href="/events" className="w-full">
@@ -336,7 +310,6 @@ export default function Dashboard() {
                                 ref={(el) => cameraFeedRefs.current.set(camera.id, el)}
                                 camera={camera} 
                                 onFullscreen={setFullscreenCamera}
-                                onDetect={handleOpenDetector}
                                 showAdminControls={user?.role === 'admin'}
                             />
                             ) : (
@@ -397,12 +370,6 @@ export default function Dashboard() {
         cameras={cameras} 
         layouts={layouts}
         onLayoutsUpdate={onLayoutsUpdate} 
-      />
-      <ObjectDetectionPanel 
-        open={isObjectDetectorOpen} 
-        onOpenChange={setIsObjectDetectorOpen} 
-        camera={detectionData?.camera ?? null} 
-        initialFrame={detectionData?.frame ?? null}
       />
     </SidebarProvider>
   );

@@ -8,7 +8,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Settings as SettingsIcon, Camera, Users, ChevronRight } from 'lucide-react';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { Aperture, History, LayoutGrid, ListVideo, LogOut, ScanSearch } from 'lucide-react';
+import { Aperture, History, LayoutGrid, ListVideo, LogOut } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 
@@ -62,12 +62,6 @@ export default function SettingsPage() {
                                 <span className="group-data-[collapsible=icon]:hidden">Playback</span>
                                 </SidebarMenuButton>
                             </Link>
-                        </SidebarMenuItem>
-                        <SidebarMenuItem>
-                            <SidebarMenuButton tooltip="Object Detection" disabled>
-                            <ScanSearch />
-                            <span className="group-data-[collapsible=icon]:hidden">Object Detection</span>
-                            </SidebarMenuButton>
                         </SidebarMenuItem>
                         <SidebarMenuItem>
                             <Link href="/events" className="w-full">

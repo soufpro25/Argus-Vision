@@ -24,12 +24,6 @@ export interface Layout {
   }
 }
 
-export interface DetectedObject {
-  label: string;
-  confidence: number;
-  box: [number, number, number, number]; // [x1, y1, x2, y2]
-}
-
 export interface Recording {
     id: string;
     timestamp: string;
@@ -42,7 +36,7 @@ export interface Recording {
 export interface Event {
   id: string;
   timestamp: string;
-  type: 'Recording' | 'Object Detection';
+  type: 'Recording';
   cameraName: string;
   description: string;
   referenceId?: string; // e.g., recording ID

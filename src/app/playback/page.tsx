@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 import type { Recording } from '@/lib/types';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import Link from 'next/link';
-import { Aperture, History, LayoutGrid, ListVideo, LogOut, ScanSearch, Settings } from 'lucide-react';
+import { Aperture, History, LayoutGrid, ListVideo, LogOut, Settings } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
@@ -58,12 +58,6 @@ export default function PlaybackPage() {
                         <span className="group-data-[collapsible=icon]:hidden">Playback</span>
                       </SidebarMenuButton>
                     </Link>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                      <SidebarMenuButton tooltip="Object Detection" disabled>
-                        <ScanSearch />
-                        <span className="group-data-[collapsible=icon]:hidden">Object Detection</span>
-                      </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                       <Link href="/events" className="w-full">
