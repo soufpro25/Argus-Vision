@@ -62,7 +62,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
             <Logo className="mx-auto h-12 w-auto text-primary" />
-          <CardTitle className="text-2xl mt-4">Welcome to Sentra</CardTitle>
+          <CardTitle className="text-2xl mt-4">Welcome to Argus Vision</CardTitle>
           <CardDescription>
             {hasUsers ? "Sign in to your account" : "Create the first admin account to get started"}
           </CardDescription>

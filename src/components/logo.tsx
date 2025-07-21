@@ -5,20 +5,35 @@ import { cn } from "@/lib/utils"
 export function Logo({ className, ...props }: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
-      viewBox="0 0 40 40"
-      xmlns="http://www.w3.org/2000/svg"
-      className={cn("text-primary", className)}
-      {...props}
+        viewBox="0 0 40 40"
+        xmlns="http://www.w3.org/2000/svg"
+        className={cn("text-primary", className)}
+        {...props}
     >
-        <title>Sentra Logo</title>
-        <path
-            d="M20 4.1665C11.2583 4.1665 4.16667 11.2582 4.16667 19.9998C4.16667 28.7415 11.2583 35.8332 20 35.8332C28.7417 35.8332 35.8333 28.7415 35.8333 19.9998C35.8333 11.2582 28.7417 4.1665 20 4.1665ZM20 29.9998C14.475 29.9998 10 25.5248 10 19.9998C10 14.4748 14.475 9.99984 20 9.99984C25.525 9.99984 30 14.4748 30 19.9998C30 25.5248 25.525 29.9998 20 29.9998Z"
-            fill="currentColor"
-            fillOpacity="0.4"
+        <title>Argus Vision Logo</title>
+        <path 
+            d="M20,10 C27.5,10 33,20 33,20 C33,20 27.5,30 20,30 C12.5,30 7,20 7,20 C7,20 12.5,10 20,10 Z" 
+            stroke="currentColor" 
+            strokeWidth="2.5" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+            fill="none"
+            opacity="0.7"
         />
-        <path
-            d="M20 12.5C15.8583 12.5 12.5 15.8582 12.5 19.9998C12.5 24.1415 15.8583 27.4998 20 27.4998C24.1417 27.4998 27.5 24.1415 27.5 19.9998C27.5 15.8582 24.1417 12.5 20 12.5ZM20 23.3332C18.1583 23.3332 16.6667 21.8415 16.6667 19.9998C16.6667 18.1582 18.1583 16.6665 20 16.6665C21.8417 16.6665 23.3333 18.1582 23.3333 19.9998C23.3333 21.8415 21.8417 23.3332 20 23.3332Z"
+        <circle 
+            cx="20" 
+            cy="20" 
+            r="5" 
+            stroke="currentColor" 
+            strokeWidth="2.5" 
             fill="currentColor"
+            fillOpacity="0.3"
+        />
+        <circle
+             cx="20" 
+             cy="20" 
+             r="1.5" 
+             fill="currentColor"
         />
     </svg>
   )

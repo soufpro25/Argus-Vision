@@ -203,7 +203,7 @@ export default function Dashboard() {
                 <Button variant="ghost" size="icon" className="h-10 w-10 text-primary hover:bg-transparent">
                   <Logo className="h-6 w-auto" />
                 </Button>
-                <h1 className="text-lg font-semibold tracking-tighter group-data-[collapsible=icon]:hidden">Sentra</h1>
+                <h1 className="text-lg font-semibold tracking-tighter group-data-[collapsible=icon]:hidden">Argus Vision</h1>
             </div>
           </SidebarHeader>
           <SidebarContent>
@@ -315,7 +315,7 @@ export default function Dashboard() {
             ) : (
                 <Card className="flex flex-col items-center justify-center h-full text-center p-8 border-2 border-dashed rounded-lg bg-card border-border">
                     <Video className="h-16 w-16 text-primary mb-4" />
-                    <h2 className="text-2xl font-bold tracking-tight">Welcome to Sentra</h2>
+                    <h2 className="text-2xl font-bold tracking-tight">Welcome to Argus Vision</h2>
                     {user?.role === 'admin' ? (
                         <>
                             <p className="text-muted-foreground mt-2 max-w-md mx-auto">

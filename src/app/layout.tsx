@@ -12,7 +12,7 @@ const fontSans = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Sentra',
+  title: 'Argus Vision',
   description: 'A self-hosted NVR/VMS system',
 };
 
