@@ -36,50 +36,30 @@ export const VideoStream = forwardRef<VideoStreamRef, VideoStreamProps>(
     }));
     
     useEffect(() => {
+      if (videoRef.current) {
         console.info(`Attempting to play stream: ${streamUrl}. A media server is required to convert RTSP for web playback.`);
         
-        async function setupVideoStream() {
-            if (videoRef.current) {
-                try {
-                    // For demo purposes, we use a public MP4 file.
-                    // In a real scenario, this would be an HLS or DASH stream URL.
-                    const demoVideoUrl = 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
-                    
-                    const sourceVideo = document.createElement('video');
-                    sourceVideo.src = demoVideoUrl;
-                    sourceVideo.crossOrigin = 'anonymous';
-                    sourceVideo.loop = true;
-                    sourceVideo.muted = true;
-                    
-                    sourceVideo.onerror = (e) => {
-                        console.error("Error playing the source video.", e);
-                        setIsError(true);
-                    };
-                    
-                    // Wait for the source video to be playable
-                    await sourceVideo.play();
-                    
-                    // Capture the stream from the source video
-                    const stream = (sourceVideo as any).captureStream();
-                    
-                    if (videoRef.current) {
-                        videoRef.current.srcObject = stream;
-                        await videoRef.current.play();
-                        videoRef.current.addEventListener('error', (e) => {
-                            console.error('Error with video element', e);
-                            setIsError(true);
-                        });
-                    }
-
-                } catch (e) {
-                    console.error("Failed to setup video stream:", e);
-                    setIsError(true);
-                }
-            }
-        }
+        // For demo purposes, we use a public MP4 file.
+        // In a real scenario, this would be an HLS or DASH stream URL from a media server.
+        const demoVideoUrl = 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
         
-        setupVideoStream();
+        const videoElement = videoRef.current;
+        videoElement.src = demoVideoUrl;
+        videoElement.loop = true;
+        videoElement.muted = true;
+        videoElement.crossOrigin = 'anonymous';
 
+        videoElement.addEventListener('error', () => {
+            console.error(`Error playing video stream from: ${demoVideoUrl}`);
+            setIsError(true);
+        });
+
+        videoElement.play().catch(error => {
+            console.error('Autoplay was prevented.', error);
+            // We don't set isError here, as the user might still be able to play it manually if we had controls.
+            // For a background video, this might just mean it won't autoplay.
+        });
+      }
     }, [streamUrl]);
 
     if (isError) {
@@ -115,5 +95,3 @@ export const VideoStream = forwardRef<VideoStreamRef, VideoStreamProps>(
 );
 
 VideoStream.displayName = 'VideoStream';
-
-    
