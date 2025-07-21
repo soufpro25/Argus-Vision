@@ -8,9 +8,10 @@ import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Settings as SettingsIcon, Camera, Users, ChevronRight } from 'lucide-react';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { Aperture, History, LayoutGrid, ListVideo, LogOut } from 'lucide-react';
+import { History, LayoutGrid, ListVideo, LogOut } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
+import { Logo } from '@/components/logo';
 
 export default function SettingsPage() {
     const { user, isLoading, logout } = useAuth();
@@ -40,9 +41,9 @@ export default function SettingsPage() {
                     <SidebarHeader>
                     <div className="flex items-center gap-2">
                         <Button variant="ghost" size="icon" className="h-10 w-10 text-primary hover:bg-transparent">
-                            <Aperture className="h-6 w-6" />
+                            <Logo className="h-6 w-auto" />
                         </Button>
-                        <h1 className="text-lg font-semibold tracking-tighter group-data-[collapsible=icon]:hidden">Argus Vision</h1>
+                        <h1 className="text-lg font-semibold tracking-tighter group-data-[collapsible=icon]:hidden">SSMART</h1>
                     </div>
                     </SidebarHeader>
                     <SidebarContent>

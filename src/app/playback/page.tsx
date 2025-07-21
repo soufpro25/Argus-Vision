@@ -7,11 +7,12 @@ import { useState, useEffect } from 'react';
 import type { Recording } from '@/lib/types';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import Link from 'next/link';
-import { Aperture, History, LayoutGrid, ListVideo, LogOut, Settings } from 'lucide-react';
+import { History, LayoutGrid, ListVideo, LogOut, Settings } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
+import { Logo } from '@/components/logo';
 
 export default function PlaybackPage() {
   const [recordings, setRecordings] = useState<Recording[]>([]);
@@ -36,9 +37,9 @@ export default function PlaybackPage() {
             <SidebarHeader>
               <div className="flex items-center gap-2">
                   <Button variant="ghost" size="icon" className="h-10 w-10 text-primary hover:bg-transparent">
-                    <Aperture className="h-6 w-6" />
+                    <Logo className="h-6 w-auto" />
                   </Button>
-                  <h1 className="text-lg font-semibold tracking-tighter group-data-[collapsible=icon]:hidden">Argus Vision</h1>
+                  <h1 className="text-lg font-semibold tracking-tighter group-data-[collapsible=icon]:hidden">SSMART</h1>
               </div>
             </SidebarHeader>
             <SidebarContent>

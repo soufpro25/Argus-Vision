@@ -3,7 +3,7 @@
 
 import { useState, useTransition, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Aperture, History, LayoutGrid, Settings, Wand2, Loader2, ListVideo, CircleDot, Play, LogOut, Video } from 'lucide-react';
+import { History, LayoutGrid, Settings, Wand2, Loader2, ListVideo, CircleDot, Play, LogOut, Video } from 'lucide-react';
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger
 } from '@/components/ui/sidebar';
@@ -20,6 +20,7 @@ import Playback from '@/components/playback';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
+import { Logo } from '@/components/logo';
 
 const RECORDING_INTERVAL = 15 * 60 * 1000; // 15 minutes
 
@@ -208,9 +209,9 @@ export default function Dashboard() {
           <SidebarHeader>
             <div className="flex items-center gap-2">
                 <Button variant="ghost" size="icon" className="h-10 w-10 text-primary hover:bg-transparent">
-                  <Aperture className="h-6 w-6" />
+                  <Logo className="h-6 w-auto" />
                 </Button>
-                <h1 className="text-lg font-semibold tracking-tighter group-data-[collapsible=icon]:hidden">Argus Vision</h1>
+                <h1 className="text-lg font-semibold tracking-tighter group-data-[collapsible=icon]:hidden">SSMART</h1>
             </div>
           </SidebarHeader>
           <SidebarContent>
@@ -324,7 +325,7 @@ export default function Dashboard() {
                 ) : (
                     <Card className="flex flex-col items-center justify-center h-full text-center p-8 border-2 border-dashed rounded-lg bg-card border-border">
                         <Video className="h-16 w-16 text-primary mb-4" />
-                        <h2 className="text-2xl font-bold tracking-tight">Welcome to Argus Vision</h2>
+                        <h2 className="text-2xl font-bold tracking-tight">Welcome to SSMART</h2>
                         {user?.role === 'admin' ? (
                             <>
                                 <p className="text-muted-foreground mt-2 max-w-md mx-auto">

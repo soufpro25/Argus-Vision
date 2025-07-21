@@ -12,9 +12,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Aperture } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { getUsers } from '@/lib/storage';
+import { Logo } from '@/components/logo';
 
 const loginSchema = z.object({
   username: z.string().min(1, 'Username is required'),
@@ -60,8 +61,8 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-            <Aperture className="mx-auto h-12 w-12 text-primary" />
-          <CardTitle className="text-2xl mt-4">Welcome to Argus Vision</CardTitle>
+            <Logo className="mx-auto h-12 w-auto text-primary" />
+          <CardTitle className="text-2xl mt-4">Welcome to SSMART</CardTitle>
           <CardDescription>
             {hasUsers ? "Sign in to your account" : "Create the first admin account to get started"}
           </CardDescription>

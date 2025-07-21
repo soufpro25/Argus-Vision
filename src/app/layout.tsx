@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
@@ -11,7 +12,7 @@ const fontSans = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Argus Vision',
+  title: 'SSMART',
   description: 'A self-hosted NVR/VMS system',
 };
 

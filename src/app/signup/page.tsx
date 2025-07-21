@@ -12,8 +12,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Aperture } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { getUsers } from '@/lib/storage';
+import { Logo } from '@/components/logo';
 
 const signupSchema = z.object({
   username: z.string().min(3, 'Username must be at least 3 characters'),
@@ -67,10 +68,10 @@ export default function SignupPage() {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-            <Aperture className="mx-auto h-12 w-12 text-primary" />
+            <Logo className="mx-auto h-12 w-auto text-primary" />
           <CardTitle className="text-2xl mt-4">Create Admin Account</CardTitle>
           <CardDescription>
-            This will be the primary administrator account for Argus Vision.
+            This will be the primary administrator account for SSMART.
           </CardDescription>
         </CardHeader>
         <CardContent>
