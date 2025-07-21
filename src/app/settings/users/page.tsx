@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Edit, Trash2, Users as UsersIcon, ArrowLeft } from 'lucide-react';
+import { Plus, Edit, Trash2, Users as UsersIcon, ArrowLeft, History } from 'lucide-react';
 import type { User } from '@/lib/types';
 import { getUsers } from '@/lib/storage';
 import { useToast } from '@/hooks/use-toast';
@@ -19,7 +19,7 @@ import { useAuth } from '@/hooks/use-auth';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { History, LayoutGrid, ListVideo, LogOut, Settings } from 'lucide-react';
+import { LayoutGrid, LogOut, Settings } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Logo } from '@/components/logo';
 
@@ -142,6 +142,14 @@ export default function UsersSettingsPage() {
                                 <SidebarMenuButton tooltip="Live View">
                                     <LayoutGrid />
                                     <span className="group-data-[collapsible=icon]:hidden">Live View</span>
+                                </SidebarMenuButton>
+                            </Link>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                            <Link href="/playback" className="w-full">
+                                <SidebarMenuButton tooltip="Playback">
+                                <History />
+                                <span className="group-data-[collapsible=icon]:hidden">Playback</span>
                                 </SidebarMenuButton>
                             </Link>
                         </SidebarMenuItem>

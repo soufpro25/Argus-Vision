@@ -3,7 +3,7 @@
 
 import { useState, useTransition, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { History, LayoutGrid, Settings, Wand2, Loader2, ListVideo, CircleDot, Play, LogOut, Video } from 'lucide-react';
+import { History, LayoutGrid, Settings, Wand2, Loader2, CircleDot, LogOut, Video } from 'lucide-react';
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger
 } from '@/components/ui/sidebar';
@@ -15,8 +15,6 @@ import { LayoutManager } from '@/components/layout-manager';
 import { useToast } from '@/hooks/use-toast';
 import { summarizeRecordingAction } from '../actions';
 import { getCameras, getLayouts, getRecordings } from '@/lib/storage';
-import { Slider } from '@/components/ui/slider';
-import Playback from '@/components/playback';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
@@ -32,7 +30,6 @@ export default function Dashboard() {
   const [fullscreenCamera, setFullscreenCamera] = useState<Camera | null>(null);
   const [isLayoutManagerOpen, setIsLayoutManagerOpen] = useState(false);
   const [isRecordingPending, startRecordingTransition] = useTransition();
-  const [isLive, setIsLive] = useState(true);
   const { toast } = useToast();
   const { user, logout } = useAuth();
   const router = useRouter();
@@ -190,11 +187,6 @@ export default function Dashboard() {
     }
   };
   
-  const handleTimelineChange = (value: number[]) => {
-    setIsLive(value[0] === 100);
-  };
-
-
   const gridStyle = activeLayout ? {
     gridTemplateColumns: `repeat(${activeLayout.grid.cols}, minmax(0, 1fr))`,
     gridTemplateRows: `repeat(${activeLayout.grid.rows}, minmax(0, auto))`,
@@ -223,6 +215,14 @@ export default function Dashboard() {
                         <span className="group-data-[collapsible=icon]:hidden">Live View</span>
                     </SidebarMenuButton>
                   </Link>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                    <Link href="/playback" className="w-full">
+                        <SidebarMenuButton tooltip="Playback">
+                           <History />
+                           <span className="group-data-[collapsible=icon]:hidden">Playback</span>
+                        </SidebarMenuButton>
+                    </Link>
                 </SidebarMenuItem>
                  <SidebarMenuItem>
                     <Link href="/events" className="w-full">
@@ -290,69 +290,51 @@ export default function Dashboard() {
             </div>
           </header>
           <div className="flex-1 p-4 bg-background/95 overflow-auto bg-grid-pattern flex flex-col">
-            {isLive ? (
-              <>
-                {activeLayout && activeLayout.grid.cameras.length > 0 ? (
-                    <div className="h-full w-full grid gap-4" style={gridStyle}>
-                    {activeLayout.grid.cameras.map((cameraId, index) => {
-                        const camera = getCameraById(cameraId);
-                        return (
-                        <div key={cameraId ? `${cameraId}-${index}`: index} className="bg-transparent rounded-lg overflow-hidden min-h-[200px] group">
-                            {camera ? (
-                            <CameraFeed 
-                                ref={(el) => cameraFeedRefs.current.set(camera.id, el)}
-                                camera={camera} 
-                                onFullscreen={setFullscreenCamera}
-                                showAdminControls={user?.role === 'admin'}
-                            />
-                            ) : (
-                            <div className="h-full w-full flex items-center justify-center bg-muted/50 rounded-lg">
-                                <span className="text-muted-foreground text-sm">Empty Slot</span>
-                            </div>
-                            )}
+            {activeLayout && activeLayout.grid.cameras.length > 0 ? (
+                <div className="h-full w-full grid gap-4" style={gridStyle}>
+                {activeLayout.grid.cameras.map((cameraId, index) => {
+                    const camera = getCameraById(cameraId);
+                    return (
+                    <div key={cameraId ? `${cameraId}-${index}`: index} className="bg-transparent rounded-lg overflow-hidden min-h-[200px] group">
+                        {camera ? (
+                        <CameraFeed 
+                            ref={(el) => cameraFeedRefs.current.set(camera.id, el)}
+                            camera={camera} 
+                            onFullscreen={setFullscreenCamera}
+                            showAdminControls={user?.role === 'admin'}
+                        />
+                        ) : (
+                        <div className="h-full w-full flex items-center justify-center bg-muted/50 rounded-lg">
+                            <span className="text-muted-foreground text-sm">Empty Slot</span>
                         </div>
-                        );
-                    })}
-                    </div>
-                ) : (
-                    <Card className="flex flex-col items-center justify-center h-full text-center p-8 border-2 border-dashed rounded-lg bg-card border-border">
-                        <Video className="h-16 w-16 text-primary mb-4" />
-                        <h2 className="text-2xl font-bold tracking-tight">Welcome to Sentra</h2>
-                        {user?.role === 'admin' ? (
-                            <>
-                                <p className="text-muted-foreground mt-2 max-w-md mx-auto">
-                                    Your self-hosted surveillance hub. To get started, add your first camera feed.
-                                </p>
-                                <Button asChild className="mt-6">
-                                    <Link href="/settings/cameras">
-                                        <Settings className="mr-2 h-4 w-4" /> Add a Camera
-                                    </Link>
-                                </Button>
-                            </>
-                        ): (
-                             <p className="text-muted-foreground mt-2 max-w-md mx-auto">
-                                No cameras have been configured. Please contact an administrator.
-                            </p>
                         )}
-                    </Card>
-                )}
-              </>
-            ) : (
-                <div className="h-full w-full">
-                    <Playback isDashboard={true} recordings={recordings} />
+                    </div>
+                    );
+                })}
                 </div>
+            ) : (
+                <Card className="flex flex-col items-center justify-center h-full text-center p-8 border-2 border-dashed rounded-lg bg-card border-border">
+                    <Video className="h-16 w-16 text-primary mb-4" />
+                    <h2 className="text-2xl font-bold tracking-tight">Welcome to Sentra</h2>
+                    {user?.role === 'admin' ? (
+                        <>
+                            <p className="text-muted-foreground mt-2 max-w-md mx-auto">
+                                Your self-hosted surveillance hub. To get started, add your first camera feed.
+                            </p>
+                            <Button asChild className="mt-6">
+                                <Link href="/settings/cameras">
+                                    <Settings className="mr-2 h-4 w-4" /> Add a Camera
+                                </Link>
+                            </Button>
+                        </>
+                    ): (
+                         <p className="text-muted-foreground mt-2 max-w-md mx-auto">
+                            No cameras have been configured. Please contact an administrator.
+                        </p>
+                    )}
+                </Card>
             )}
           </div>
-           <footer className="p-4 border-t shrink-0 bg-card flex items-center gap-4">
-                <Button variant={isLive ? "ghost" : "default"} onClick={() => setIsLive(false)} size="sm">
-                    <Play className="mr-2 h-4 w-4" />
-                    Playback
-                </Button>
-                <Slider defaultValue={[100]} max={100} step={1} className="flex-1" onValueChange={handleTimelineChange} />
-                <div className={`text-sm font-semibold px-3 py-1 rounded-md ${isLive ? 'bg-destructive text-destructive-foreground' : 'bg-muted text-muted-foreground'}`}>
-                    {isLive ? 'LIVE' : 'PLAYBACK'}
-                </div>
-            </footer>
         </main>
       </div>
       
@@ -367,5 +349,3 @@ export default function Dashboard() {
     </SidebarProvider>
   );
 }
-
-    

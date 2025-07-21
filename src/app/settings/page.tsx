@@ -6,9 +6,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Settings as SettingsIcon, Camera, Users, ChevronRight } from 'lucide-react';
+import { Settings as SettingsIcon, Camera, Users, ChevronRight, History } from 'lucide-react';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { History, LayoutGrid, ListVideo, LogOut } from 'lucide-react';
+import { LayoutGrid, LogOut } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/logo';
@@ -53,6 +53,14 @@ export default function SettingsPage() {
                                 <SidebarMenuButton tooltip="Live View">
                                     <LayoutGrid />
                                     <span className="group-data-[collapsible=icon]:hidden">Live View</span>
+                                </SidebarMenuButton>
+                            </Link>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                            <Link href="/playback" className="w-full">
+                                <SidebarMenuButton tooltip="Playback">
+                                <History />
+                                <span className="group-data-[collapsible=icon]:hidden">Playback</span>
                                 </SidebarMenuButton>
                             </Link>
                         </SidebarMenuItem>

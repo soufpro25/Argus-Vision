@@ -12,13 +12,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Plus, Edit, Trash2, Camera as CameraIcon, ArrowLeft } from 'lucide-react';
+import { Plus, Edit, Trash2, Camera as CameraIcon, ArrowLeft, History } from 'lucide-react';
 import type { Camera } from '@/lib/types';
 import { getCameras } from '@/lib/storage';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { History, LayoutGrid, ListVideo, LogOut, Settings } from 'lucide-react';
+import { LayoutGrid, LogOut, Settings } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
@@ -132,6 +132,14 @@ export default function CamerasSettingsPage() {
                                 <SidebarMenuButton tooltip="Live View">
                                     <LayoutGrid />
                                     <span className="group-data-[collapsible=icon]:hidden">Live View</span>
+                                </SidebarMenuButton>
+                            </Link>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                            <Link href="/playback" className="w-full">
+                                <SidebarMenuButton tooltip="Playback">
+                                <History />
+                                <span className="group-data-[collapsible=icon]:hidden">Playback</span>
                                 </SidebarMenuButton>
                             </Link>
                         </SidebarMenuItem>

@@ -34,8 +34,6 @@ export default function Events() {
         switch (type) {
             case 'Recording':
                 return <Video className="h-5 w-5 text-blue-400" />;
-            case 'Object Detection':
-                return <ScanSearch className="h-5 w-5 text-teal-400" />;
             default:
                 return <History className="h-5 w-5" />;
         }

@@ -1,7 +1,7 @@
 
 "use client";
 
-import Events from '@/components/events';
+import Playback from '@/components/playback';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import Link from 'next/link';
 import { History, LayoutGrid, LogOut, Settings } from 'lucide-react';
@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/logo';
 
-export default function EventsPage() {
+export default function PlaybackPage() {
     const { user, logout } = useAuth();
     const router = useRouter();
     const { toast } = useToast();
@@ -46,7 +46,7 @@ export default function EventsPage() {
                         </SidebarMenuItem>
                         <SidebarMenuItem>
                             <Link href="/playback" className="w-full">
-                                <SidebarMenuButton tooltip="Playback">
+                                <SidebarMenuButton tooltip="Playback" isActive={true}>
                                 <History />
                                 <span className="group-data-[collapsible=icon]:hidden">Playback</span>
                                 </SidebarMenuButton>
@@ -54,7 +54,7 @@ export default function EventsPage() {
                         </SidebarMenuItem>
                         <SidebarMenuItem>
                             <Link href="/events" className="w-full">
-                                <SidebarMenuButton tooltip="Events" isActive={true}>
+                                <SidebarMenuButton tooltip="Events">
                                 <History />
                                 <span className="group-data-[collapsible=icon]:hidden">Events</span>
                                 </SidebarMenuButton>
@@ -87,11 +87,11 @@ export default function EventsPage() {
                     </SidebarMenu>
                     </SidebarFooter>
                 </Sidebar>
-                <main className="flex-1">
+                <main className="flex-1 flex flex-col">
                     <header className="flex items-center p-4 border-b shrink-0 h-[60px]">
                         <SidebarTrigger />
                     </header>
-                    <Events />
+                    <Playback recordings={[]} />
                 </main>
             </div>
         </SidebarProvider>

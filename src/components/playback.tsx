@@ -4,50 +4,43 @@
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlayCircle, ListVideo, Film } from 'lucide-react';
+import { PlayCircle, Film, History } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { Recording } from '@/lib/types';
 import { ScrollArea } from './ui/scroll-area';
 import { getRecordings } from '@/lib/storage';
 
 interface PlaybackProps {
-    isDashboard?: boolean;
     recordings: Recording[];
 }
 
-export default function Playback({ isDashboard = false, recordings: propRecordings }: PlaybackProps) {
-    const [recordings, setRecordings] = useState<Recording[]>(propRecordings || []);
+export default function Playback({ recordings: propRecordings }: PlaybackProps) {
+    const [recordings, setRecordings] = useState<Recording[]>([]);
     const [selectedRecording, setSelectedRecording] = useState<Recording | null>(null);
     const [isPlayerOpen, setIsPlayerOpen] = useState(false);
 
     useEffect(() => {
-        if (isDashboard) {
-            setRecordings(propRecordings);
-        } else {
-             setRecordings(getRecordings());
-        }
-    }, [isDashboard, propRecordings]);
+        setRecordings(getRecordings());
+    }, []);
 
     const handlePlayRecording = (recording: Recording) => {
         setSelectedRecording(recording);
         setIsPlayerOpen(true);
     };
 
-    const mainContainerClasses = isDashboard ? "h-full w-full flex flex-col" : "h-full w-full p-4 md:p-6 flex flex-col";
+    const mainContainerClasses = "h-full w-full p-4 md:p-6 flex flex-col";
 
     return (
         <div className={mainContainerClasses}>
-            {!isDashboard && (
-                <header className="flex items-center gap-4 mb-6 shrink-0">
-                    <div className="bg-primary/10 p-3 rounded-lg border border-primary/20">
-                        <ListVideo className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                        <h1 className="text-2xl font-bold tracking-tight">Playback</h1>
-                        <p className="text-muted-foreground">Review and watch recorded video clips.</p>
-                    </div>
-                </header>
-            )}
+            <header className="flex items-center gap-4 mb-6 shrink-0">
+                <div className="bg-primary/10 p-3 rounded-lg border border-primary/20">
+                    <History className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                    <h1 className="text-2xl font-bold tracking-tight">Playback</h1>
+                    <p className="text-muted-foreground">Review and watch recorded video clips.</p>
+                </div>
+            </header>
             
             <div className="flex-grow overflow-hidden">
             {recordings && recordings.length > 0 ? (
