@@ -3,6 +3,7 @@
 
 import { forwardRef, useImperativeHandle, useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
+import { ShieldAlert } from 'lucide-react';
 
 interface VideoStreamProps {
   streamUrl: string;
@@ -36,47 +37,56 @@ export const VideoStream = forwardRef<VideoStreamRef, VideoStreamProps>(
     }));
     
     useEffect(() => {
-      if (videoRef.current) {
-        console.info(`Attempting to play stream: ${streamUrl}. A media server is required to convert RTSP for web playback.`);
+      const videoElement = videoRef.current;
+      if (videoElement) {
+        setIsError(false);
+        // We will try to play the user-provided streamUrl.
+        // NOTE: Browsers do NOT support RTSP natively. This will only work for web-friendly formats
+        // like MP4, HLS (.m3u8), or DASH (.mpd) if the browser supports them.
+        // A proper implementation requires a media server to transcode RTSP.
+        console.info(`Attempting to play stream: ${streamUrl}. For this to work, it must be in a web-compatible format (not RTSP).`);
         
-        // For demo purposes, we use a public MP4 file.
-        // In a real scenario, this would be an HLS or DASH stream URL from a media server.
-        const demoVideoUrl = 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
-        
-        const videoElement = videoRef.current;
-        videoElement.src = demoVideoUrl;
+        videoElement.src = streamUrl;
         videoElement.loop = true;
         videoElement.muted = true;
         videoElement.crossOrigin = 'anonymous';
 
-        videoElement.addEventListener('error', () => {
-            console.error(`Error playing video stream from: ${demoVideoUrl}`);
+        const onError = () => {
+            console.error(`Error playing video stream from: ${streamUrl}. This format may not be supported by your browser.`);
             setIsError(true);
-        });
+        };
+        
+        videoElement.addEventListener('error', onError);
 
         videoElement.play().catch(error => {
-            console.error('Autoplay was prevented.', error);
-            // We don't set isError here, as the user might still be able to play it manually if we had controls.
-            // For a background video, this might just mean it won't autoplay.
+            console.warn('Autoplay was prevented or failed for the stream.', error);
+            // Don't set error state here, as the stream might still be valid but just requires user interaction to play.
+            // The onerror listener will catch critical failures.
         });
+
+        return () => {
+            videoElement.removeEventListener('error', onError);
+        }
       }
     }, [streamUrl]);
 
     if (isError) {
       return (
-        <div className="w-full h-full flex flex-col items-center justify-center bg-muted text-muted-foreground">
+        <div className="w-full h-full flex flex-col items-center justify-center bg-muted text-muted-foreground relative">
           <Image
             src={thumbnailUrl}
             alt="Video feed fallback"
             data-ai-hint="security camera"
-            width={800}
-            height={600}
-            className="object-cover w-full h-full"
+            layout="fill"
+            objectFit="cover"
+            className="w-full h-full"
             priority
           />
-          <div className="absolute bottom-2 left-2 bg-destructive/80 text-destructive-foreground text-xs px-2 py-1 rounded">
-            Live feed failed. Showing thumbnail.
-          </div>
+           <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center p-4 text-center">
+                <ShieldAlert className="h-10 w-10 text-destructive mb-2" />
+                <p className="font-semibold text-white">Live Feed Unavailable</p>
+                <p className="text-xs text-white/80">Browser cannot play this stream. Ensure it's a web-friendly format (not RTSP).</p>
+           </div>
         </div>
       );
     }

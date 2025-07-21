@@ -87,3 +87,24 @@ export function applyRetentionPolicy(): void {
         saveRecordings(keptRecordings);
     }
 }
+
+export function getStorageUsage(): { bytes: number, formatted: string } {
+    if (typeof window === 'undefined') return { bytes: 0, formatted: '0 KB' };
+
+    const recordings = localStorage.getItem('recordings') || '';
+    const users = localStorage.getItem('users') || '';
+    const layouts = localStorage.getItem('layouts') || '';
+    const cameras = localStorage.getItem('cameras') || '';
+    const config = localStorage.getItem('storageConfig') || '';
+    const activeUser = localStorage.getItem('activeUser') || '';
+
+    const totalBytes = new Blob([recordings, users, layouts, cameras, config, activeUser]).size;
+
+    if (totalBytes < 1024) {
+        return { bytes: totalBytes, formatted: `${totalBytes} B` };
+    } else if (totalBytes < 1024 * 1024) {
+        return { bytes: totalBytes, formatted: `${(totalBytes / 1024).toFixed(2)} KB` };
+    } else {
+        return { bytes: totalBytes, formatted: `${(totalBytes / 1024 / 1024).toFixed(2)} MB` };
+    }
+}

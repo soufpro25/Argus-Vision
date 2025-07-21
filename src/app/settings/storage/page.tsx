@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getRecordings, getStorageConfig, saveRecordings, saveStorageConfig } from '@/lib/storage';
+import { getRecordings, getStorageConfig, saveRecordings, saveStorageConfig, getStorageUsage } from '@/lib/storage';
 import { useToast } from '@/hooks/use-toast';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import Link from 'next/link';
@@ -15,19 +15,28 @@ import { useRouter } from 'next/navigation';
 import { Logo } from '@/components/logo';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
+
+const BROWSER_STORAGE_LIMIT_MB = 5; // A conservative estimate for most browsers' localStorage limit
 
 export default function StorageSettingsPage() {
     const { user, logout } = useAuth();
     const router = useRouter();
     const { toast } = useToast();
     const [recordingsCount, setRecordingsCount] = useState(0);
+    const [storageUsage, setStorageUsage] = useState({ bytes: 0, formatted: '0 KB' });
     const [retentionDays, setRetentionDays] = useState('0'); // '0' for 'keep forever'
 
     useEffect(() => {
-        setRecordingsCount(getRecordings().length);
+        updateStorageInfo();
         const config = getStorageConfig();
         setRetentionDays(String(config.retentionDays));
     }, []);
+    
+    const updateStorageInfo = () => {
+        setRecordingsCount(getRecordings().length);
+        setStorageUsage(getStorageUsage());
+    }
 
     const handleLogout = () => {
         logout();
@@ -37,7 +46,7 @@ export default function StorageSettingsPage() {
 
     const handleClearAll = () => {
         saveRecordings([]);
-        setRecordingsCount(0);
+        updateStorageInfo();
         toast({ title: 'All recordings have been deleted.' });
     };
 
@@ -47,6 +56,8 @@ export default function StorageSettingsPage() {
         saveStorageConfig({ retentionDays: days });
         toast({ title: 'Retention policy updated.', description: `Recordings will be kept for ${days === 0 ? 'all time' : `${days} days`}.` });
     };
+    
+    const usagePercentage = Math.min(((storageUsage.bytes / 1024 / 1024) / BROWSER_STORAGE_LIMIT_MB) * 100, 100);
 
     return (
         <SidebarProvider>
@@ -120,12 +131,19 @@ export default function StorageSettingsPage() {
                             <Card>
                                 <CardHeader>
                                     <CardTitle>Storage Information</CardTitle>
-                                    <CardDescription>Details about where and how your data is stored.</CardDescription>
+                                    <CardDescription>Details about your browser's local storage usage.</CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
-                                    <p className="text-sm text-muted-foreground">
-                                        All recordings and application data are stored in your browser's local storage. This means data is kept on this device and is subject to the browser's storage limits (typically 5-10MB). For long-term storage, consider a dedicated server setup.
-                                    </p>
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between items-baseline">
+                                            <Label htmlFor="storage-usage">Browser Storage Usage</Label>
+                                            <span className="text-sm font-medium">{storageUsage.formatted} / ~5 MB</span>
+                                        </div>
+                                        <Progress id="storage-usage" value={usagePercentage} />
+                                        <p className="text-xs text-muted-foreground">
+                                            All data is stored in your browser's local storage. This is an estimate of usage.
+                                        </p>
+                                    </div>
                                     <div className="flex items-center justify-between rounded-lg border p-3">
                                         <span className="text-sm font-medium">Total Recordings</span>
                                         <span className="text-lg font-bold">{recordingsCount}</span>
