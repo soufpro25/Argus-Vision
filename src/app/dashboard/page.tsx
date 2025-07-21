@@ -224,14 +224,6 @@ export default function Dashboard() {
                     </SidebarMenuButton>
                   </Link>
                 </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <Link href="/playback" className="w-full">
-                    <SidebarMenuButton tooltip="Playback">
-                       <ListVideo />
-                       <span className="group-data-[collapsible=icon]:hidden">Playback</span>
-                    </SidebarMenuButton>
-                  </Link>
-                </SidebarMenuItem>
                  <SidebarMenuItem>
                     <Link href="/events" className="w-full">
                         <SidebarMenuButton tooltip="Events">
