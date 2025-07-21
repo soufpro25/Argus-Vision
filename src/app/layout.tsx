@@ -12,7 +12,7 @@ const fontSans = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'SSMART',
+  title: 'Sentra',
   description: 'A self-hosted NVR/VMS system',
 };
 

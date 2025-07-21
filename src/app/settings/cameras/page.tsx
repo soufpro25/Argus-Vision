@@ -122,7 +122,7 @@ export default function CamerasSettingsPage() {
                         <Button variant="ghost" size="icon" className="h-10 w-10 text-primary hover:bg-transparent">
                             <Logo className="h-6 w-auto" />
                         </Button>
-                        <h1 className="text-lg font-semibold tracking-tighter group-data-[collapsible=icon]:hidden">SSMART</h1>
+                        <h1 className="text-lg font-semibold tracking-tighter group-data-[collapsible=icon]:hidden">Sentra</h1>
                     </div>
                     </SidebarHeader>
                     <SidebarContent>

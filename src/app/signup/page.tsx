@@ -71,7 +71,7 @@ export default function SignupPage() {
             <Logo className="mx-auto h-12 w-auto text-primary" />
           <CardTitle className="text-2xl mt-4">Create Admin Account</CardTitle>
           <CardDescription>
-            This will be the primary administrator account for SSMART.
+            This will be the primary administrator account for Sentra.
           </CardDescription>
         </CardHeader>
         <CardContent>
