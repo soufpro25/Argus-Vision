@@ -1,3 +1,4 @@
+
 export interface User {
   id: string;
   username: string;
@@ -40,4 +41,8 @@ export interface Event {
   cameraName: string;
   description: string;
   referenceId?: string; // e.g., recording ID
+}
+
+export interface StorageConfig {
+  retentionDays: number; // 0 for infinite
 }

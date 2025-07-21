@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import type { User } from '@/lib/types';
-import { getActiveUser, getUsers } from '@/lib/storage';
+import { applyRetentionPolicy, getActiveUser, getUsers } from '@/lib/storage';
 
 interface AuthContextType {
   user: User | null;
@@ -20,6 +20,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Apply data retention policy on app load
+    applyRetentionPolicy();
+
     const activeUser = getActiveUser();
     setUser(activeUser);
     setIsLoading(false);

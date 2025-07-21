@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Settings as SettingsIcon, Camera, Users, ChevronRight, History } from 'lucide-react';
+import { Settings as SettingsIcon, Camera, Users, ChevronRight, History, HardDrive } from 'lucide-react';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { LayoutGrid, LogOut } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -114,7 +114,7 @@ export default function SettingsPage() {
                             </div>
                         </header>
 
-                        <div className="grid md:grid-cols-2 gap-6 mt-8">
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
                             <Link href="/settings/cameras" className="block">
                                 <Card className="hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 transition-all bg-card/50 h-full">
                                     <CardHeader className="flex flex-row items-center justify-between">
@@ -143,6 +143,22 @@ export default function SettingsPage() {
                                     <CardContent>
                                         <div className="text-sm text-primary flex items-center font-semibold">
                                             Go to User Settings <ChevronRight className="h-4 w-4 ml-1" />
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </Link>
+                            <Link href="/settings/storage" className="block">
+                                <Card className="hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 transition-all bg-card/50 h-full">
+                                    <CardHeader className="flex flex-row items-center justify-between">
+                                        <div className='space-y-1.5'>
+                                            <CardTitle>Storage</CardTitle>
+                                            <CardDescription>Manage recordings and data retention.</CardDescription>
+                                        </div>
+                                        <HardDrive className="h-8 w-8 text-muted-foreground" />
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="text-sm text-primary flex items-center font-semibold">
+                                            Manage Storage <ChevronRight className="h-4 w-4 ml-1" />
                                         </div>
                                     </CardContent>
                                 </Card>

@@ -4,20 +4,21 @@
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlayCircle, Film, History } from 'lucide-react';
+import { PlayCircle, Film, History, Trash2, ShieldAlert } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { Recording } from '@/lib/types';
 import { ScrollArea } from './ui/scroll-area';
-import { getRecordings } from '@/lib/storage';
+import { getRecordings, saveRecordings } from '@/lib/storage';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
 
-interface PlaybackProps {
-    recordings: Recording[];
-}
-
-export default function Playback({ recordings: propRecordings }: PlaybackProps) {
+export default function Playback() {
     const [recordings, setRecordings] = useState<Recording[]>([]);
     const [selectedRecording, setSelectedRecording] = useState<Recording | null>(null);
     const [isPlayerOpen, setIsPlayerOpen] = useState(false);
+    const { toast } = useToast();
+    const { user } = useAuth();
 
     useEffect(() => {
         setRecordings(getRecordings());
@@ -27,6 +28,16 @@ export default function Playback({ recordings: propRecordings }: PlaybackProps) 
         setSelectedRecording(recording);
         setIsPlayerOpen(true);
     };
+
+    const handleDeleteRecording = (recordingId: string) => {
+        const updatedRecordings = recordings.filter(rec => rec.id !== recordingId);
+        setRecordings(updatedRecordings);
+        saveRecordings(updatedRecordings);
+        toast({
+            title: 'Recording Deleted',
+            description: 'The selected clip has been removed.',
+        });
+    }
 
     const mainContainerClasses = "h-full w-full p-4 md:p-6 flex flex-col";
 
@@ -48,7 +59,7 @@ export default function Playback({ recordings: propRecordings }: PlaybackProps) 
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {recordings.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).map(rec => (
                             <Card key={rec.id} className="overflow-hidden flex flex-col group bg-card hover:border-primary/50 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/10">
-                                 <div className="relative aspect-video overflow-hidden">
+                                <div className="relative aspect-video overflow-hidden">
                                     <video
                                         src={rec.videoDataUri}
                                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
@@ -60,6 +71,27 @@ export default function Playback({ recordings: propRecordings }: PlaybackProps) 
                                             <PlayCircle className="h-8 w-8" />
                                         </Button>
                                     </div>
+                                    {user?.role === 'admin' && (
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>Delete Recording?</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        This will permanently delete the clip. This action cannot be undone.
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                    <AlertDialogAction onClick={() => handleDeleteRecording(rec.id)}>Delete</AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
+                                    )}
                                 </div>
                                 <CardHeader>
                                     <CardTitle className="text-base truncate">{rec.title}</CardTitle>
@@ -88,13 +120,18 @@ export default function Playback({ recordings: propRecordings }: PlaybackProps) 
                     <DialogHeader>
                         <DialogTitle>{selectedRecording?.title}</DialogTitle>
                     </DialogHeader>
-                    {selectedRecording?.videoDataUri && (
+                    {selectedRecording?.videoDataUri ? (
                          <video
                             src={selectedRecording.videoDataUri}
                             className="w-full aspect-video rounded-md"
                             controls
                             autoPlay
                          />
+                    ) : (
+                        <div className="w-full aspect-video rounded-md bg-muted flex flex-col items-center justify-center">
+                            <ShieldAlert className="h-12 w-12 text-muted-foreground" />
+                            <p className="mt-4 text-muted-foreground">Could not load video.</p>
+                        </div>
                     )}
                 </DialogContent>
             </Dialog>
