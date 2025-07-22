@@ -29,18 +29,17 @@ const userSchema = z.object({
   password: z.string().optional().or(z.literal('')),
   role: z.enum(['admin', 'viewer']),
 }).refine(data => {
-    // If it's a new user (no id), password must be provided.
-    // If it's an existing user, password can be blank.
+    // If it's a new user (no id), password must be provided and be long enough.
     if (!data.id && (!data.password || data.password.length < 6)) {
         return false;
     }
-    // If password is provided for an existing user, it must be long enough
-    if (data.id && data.password && data.password.length < 6) {
+    // If a password IS provided for an existing user, it must be long enough.
+    if (data.id && data.password && data.password.length > 0 && data.password.length < 6) {
         return false;
     }
     return true;
 }, {
-    message: "Password must be at least 6 characters for new users.",
+    message: "Password must be at least 6 characters.",
     path: ["password"],
 });
 
@@ -48,7 +47,7 @@ const userSchema = z.object({
 type UserFormValues = z.infer<typeof userSchema>;
 
 export default function UsersSettingsPage() {
-    const { user: activeUser, logout } = useAuth();
+    const { user: activeUser, logout, signup } = useAuth();
     const router = useRouter();
     const [users, setUsers] = useState<User[]>([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -76,37 +75,30 @@ export default function UsersSettingsPage() {
     });
 
     const handleSaveChanges = (values: UserFormValues) => {
-        const newUsers = [...users];
-
         if (editingUser) { // Editing existing user
-            const index = newUsers.findIndex(u => u.id === editingUser.id);
+            const currentUsers = getUsers();
+            const index = currentUsers.findIndex(u => u.id === editingUser.id);
             if (index > -1) {
-                const updatedUser = { ...newUsers[index], ...values };
+                const updatedUser = { ...currentUsers[index], ...values };
                 if (!values.password) { // Keep old password if not provided
-                    updatedUser.password = newUsers[index].password;
+                    updatedUser.password = currentUsers[index].password;
                 }
-                newUsers[index] = updatedUser;
+                currentUsers[index] = updatedUser;
+                localStorage.setItem('users', JSON.stringify(currentUsers));
+                setUsers(currentUsers);
+                toast({ title: 'User Updated', description: `User "${values.username}" has been updated.` });
             }
         } else { // Adding new user
-            if (!values.password) {
-                form.setError("password", { message: "Password is required for new users." });
-                return;
-            }
-            const newUser: User = {
-                id: `user-${Date.now()}`,
-                username: values.username,
-                password: values.password,
-                role: values.role,
-            };
-            newUsers.push(newUser);
+            signup(values.username, values.password, values.role).then(success => {
+                if (success) {
+                    setUsers(getUsers());
+                    toast({ title: 'User Added', description: `User "${values.username}" has been created.` });
+                } else {
+                    toast({ variant: 'destructive', title: 'Failed to add user', description: 'This username might already be taken.' });
+                }
+            });
         }
-
-        setUsers(newUsers);
-        localStorage.setItem('users', JSON.stringify(newUsers));
-        toast({
-            title: `User ${editingUser ? 'updated' : 'added'}`,
-            description: `User "${values.username}" has been saved.`,
-        });
+        
         setIsDialogOpen(false);
         setEditingUser(null);
     };
@@ -116,10 +108,10 @@ export default function UsersSettingsPage() {
         if (user) {
             form.reset({
               ...user,
-              password: '', // Don't show existing password
+              password: '', // Don't show existing password hash
             });
         } else {
-            form.reset({ username: '', password: '', role: 'viewer' });
+            form.reset({ id: undefined, username: '', password: '', role: 'viewer' });
         }
         setIsDialogOpen(true);
     };
@@ -246,7 +238,7 @@ export default function UsersSettingsPage() {
                                                 <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(user)}>
                                                     <Edit className="h-4 w-4" />
                                                 </Button>
-                                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDeleteUser(user.id)}>
+                                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDeleteUser(user.id)} disabled={user.id === activeUser?.id}>
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
                                             </div>
@@ -283,7 +275,7 @@ export default function UsersSettingsPage() {
                                                 <FormItem>
                                                     <FormLabel>Password</FormLabel>
                                                     <FormControl>
-                                                        <Input type="password" placeholder={editingUser ? "Leave blank to keep current password" : "••••••••"} {...field} />
+                                                        <Input type="password" placeholder={editingUser ? "Leave blank to keep current password" : "At least 6 characters"} {...field} />
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>

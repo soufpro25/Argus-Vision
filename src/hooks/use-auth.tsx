@@ -10,7 +10,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (username: string, password?: string) => Promise<boolean>;
   logout: () => void;
-  signup: (username: string, password?: string) => Promise<boolean>;
+  signup: (username: string, password?: string, role?: 'admin' | 'viewer') => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -41,30 +41,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return false;
   };
   
-  const signup = async (username: string, password?: string): Promise<boolean> => {
+  const signup = async (username: string, password?: string, role?: 'admin' | 'viewer'): Promise<boolean> => {
     const users = getUsers();
     
-    // First user is always an admin
-    const role = users.length === 0 ? 'admin' : 'viewer';
-    
     if (users.find(u => u.username === username)) {
-      return false; // User already exists
+      console.error("Signup failed: Username already exists.");
+      return false; 
     }
 
+    // First user is always an admin, otherwise use provided role or default to viewer
+    const assignedRole = users.length === 0 ? 'admin' : (role || 'viewer');
+    
     const newUser: User = {
         id: `user-${Date.now()}`,
         username,
         password,
-        role,
+        role: assignedRole,
     };
     
     const updatedUsers = [...users, newUser];
     localStorage.setItem('users', JSON.stringify(updatedUsers));
     
-    // Automatically log in the new user
-    const userToStore = { id: newUser.id, username: newUser.username, role: newUser.role };
-    localStorage.setItem('activeUser', JSON.stringify(userToStore));
-    setUser(userToStore);
+    // Automatically log in the new user only if it's the first user signing up
+    if (users.length === 0) {
+        const userToStore = { id: newUser.id, username: newUser.username, role: newUser.role };
+        localStorage.setItem('activeUser', JSON.stringify(userToStore));
+        setUser(userToStore);
+    }
 
     return true;
   }

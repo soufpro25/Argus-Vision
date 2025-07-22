@@ -30,10 +30,8 @@ export default function LoginPage() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   
-  const [hasUsers, setHasUsers] = useState(false);
-  useEffect(() => {
-    setHasUsers(getUsers().length > 0);
-  }, []);
+  // This check is safe to run on the client and will not cause a flash
+  const hasUsers = getUsers().length > 0;
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
