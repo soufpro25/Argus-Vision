@@ -9,7 +9,7 @@ import { getRecordings, getStorageConfig, saveRecordings, saveStorageConfig, get
 import { useToast } from '@/hooks/use-toast';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import Link from 'next/link';
-import { ArrowLeft, History, LayoutGrid, LogOut, Settings, HardDrive, Trash2, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, History, LayoutGrid, LogOut, Settings, HardDrive, Trash2, AlertTriangle, Bell } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { Logo } from '@/components/logo';
@@ -85,7 +85,7 @@ export default function StorageSettingsPage() {
                             </SidebarMenuItem>
                             <SidebarMenuItem>
                                 <Link href="/events" className="w-full">
-                                    <SidebarMenuButton tooltip="Events"><History /><span className="group-data-[collapsible=icon]:hidden">Events</span></SidebarMenuButton>
+                                    <SidebarMenuButton tooltip="Events"><Bell /><span className="group-data-[collapsible=icon]:hidden">Events</span></SidebarMenuButton>
                                 </Link>
                             </SidebarMenuItem>
                             {user?.role === 'admin' && (

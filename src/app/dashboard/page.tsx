@@ -3,7 +3,7 @@
 
 import { useState, useTransition, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { History, LayoutGrid, Settings, Wand2, Loader2, CircleDot, LogOut, Video } from 'lucide-react';
+import { History, LayoutGrid, Settings, Wand2, Loader2, CircleDot, LogOut, Video, Bell } from 'lucide-react';
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger
 } from '@/components/ui/sidebar';
@@ -19,6 +19,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Logo } from '@/components/logo';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 const RECORDING_INTERVAL = 15 * 60 * 1000; // 15 minutes
 
@@ -227,7 +228,7 @@ export default function Dashboard() {
                  <SidebarMenuItem>
                     <Link href="/events" className="w-full">
                         <SidebarMenuButton tooltip="Events">
-                           <History />
+                           <Bell />
                            <span className="group-data-[collapsible=icon]:hidden">Events</span>
                         </SidebarMenuButton>
                     </Link>
@@ -281,10 +282,21 @@ export default function Dashboard() {
                       <Wand2 className="mr-0 md:mr-2 h-4 w-4"/>
                       <span className="hidden md:inline">Manage Layouts</span>
                   </Button>
-                   <Button variant="destructive" onClick={handleManualRecord} disabled={isRecordingPending}>
-                      {isRecordingPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CircleDot className="mr-0 md:mr-2 h-4 w-4"/>}
-                      <span className="hidden md:inline">{isRecordingPending ? 'Recording...' : 'Record'}</span>
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="relative">
+                        <Button variant="destructive" onClick={handleManualRecord} disabled={isRecordingPending || cameras.length === 0}>
+                            {isRecordingPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CircleDot className="mr-0 md:mr-2 h-4 w-4"/>}
+                            <span className="hidden md:inline">{isRecordingPending ? 'Recording...' : 'Record'}</span>
+                        </Button>
+                      </div>
+                    </TooltipTrigger>
+                    {cameras.length === 0 && (
+                      <TooltipContent>
+                        <p>Add a camera in settings to enable recording.</p>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
                 </>
               )}
             </div>
@@ -301,7 +313,6 @@ export default function Dashboard() {
                             ref={(el) => cameraFeedRefs.current.set(camera.id, el)}
                             camera={camera} 
                             onFullscreen={setFullscreenCamera}
-                            showAdminControls={user?.role === 'admin'}
                         />
                         ) : (
                         <div className="h-full w-full flex items-center justify-center bg-muted/50 rounded-lg">

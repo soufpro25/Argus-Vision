@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { History, Video, ScanSearch } from 'lucide-react';
+import { Bell, Video } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Event } from '@/lib/types';
 import { ScrollArea } from './ui/scroll-area';
@@ -35,7 +35,7 @@ export default function Events() {
             case 'Recording':
                 return <Video className="h-5 w-5 text-blue-400" />;
             default:
-                return <History className="h-5 w-5" />;
+                return <Bell className="h-5 w-5" />;
         }
     }
 
@@ -43,7 +43,7 @@ export default function Events() {
         <div className="h-full w-full p-4 md:p-6 flex flex-col">
             <header className="flex items-center gap-4 mb-6 shrink-0">
                 <div className="bg-primary/10 p-3 rounded-lg border border-primary/20">
-                    <History className="h-6 w-6 text-primary" />
+                    <Bell className="h-6 w-6 text-primary" />
                 </div>
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight">Event Log</h1>
@@ -78,7 +78,7 @@ export default function Events() {
                     </ScrollArea>
                 ) : (
                     <div className="flex flex-col items-center justify-center h-full text-center p-8 border-2 border-dashed rounded-lg bg-card/50">
-                        <History className="h-16 w-16 text-muted-foreground mb-4" />
+                        <Bell className="h-16 w-16 text-muted-foreground mb-4" />
                         <h2 className="text-xl font-semibold">No Events Found</h2>
                         <p className="text-muted-foreground mt-2">
                             Events will appear here as they happen, such as when recordings are saved.

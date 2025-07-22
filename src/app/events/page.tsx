@@ -4,7 +4,7 @@
 import Events from '@/components/events';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import Link from 'next/link';
-import { History, LayoutGrid, LogOut, Settings } from 'lucide-react';
+import { History, LayoutGrid, LogOut, Settings, Bell } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
@@ -55,7 +55,7 @@ export default function EventsPage() {
                         <SidebarMenuItem>
                             <Link href="/events" className="w-full">
                                 <SidebarMenuButton tooltip="Events" isActive={true}>
-                                <History />
+                                <Bell />
                                 <span className="group-data-[collapsible=icon]:hidden">Events</span>
                                 </SidebarMenuButton>
                             </Link>

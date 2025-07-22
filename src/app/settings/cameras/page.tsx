@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Plus, Edit, Trash2, Camera as CameraIcon, ArrowLeft, History } from 'lucide-react';
+import { Plus, Edit, Trash2, Camera as CameraIcon, ArrowLeft, History, Bell } from 'lucide-react';
 import type { Camera } from '@/lib/types';
 import { getCameras } from '@/lib/storage';
 import { useToast } from '@/hooks/use-toast';
@@ -146,7 +146,7 @@ export default function CamerasSettingsPage() {
                         <SidebarMenuItem>
                             <Link href="/events" className="w-full">
                                 <SidebarMenuButton tooltip="Events">
-                                <History />
+                                <Bell />
                                 <span className="group-data-[collapsible=icon]:hidden">Events</span>
                                 </SidebarMenuButton>
                             </Link>

@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Edit, Trash2, Users as UsersIcon, ArrowLeft, History } from 'lucide-react';
+import { Plus, Edit, Trash2, Users as UsersIcon, ArrowLeft, History, Bell } from 'lucide-react';
 import type { User } from '@/lib/types';
 import { getUsers } from '@/lib/storage';
 import { useToast } from '@/hooks/use-toast';
@@ -156,7 +156,7 @@ export default function UsersSettingsPage() {
                         <SidebarMenuItem>
                             <Link href="/events" className="w-full">
                                 <SidebarMenuButton tooltip="Events">
-                                <History />
+                                <Bell />
                                 <span className="group-data-[collapsible=icon]:hidden">Events</span>
                                 </SidebarMenuButton>
                             </Link>

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Settings as SettingsIcon, Camera, Users, ChevronRight, History, HardDrive } from 'lucide-react';
+import { Settings as SettingsIcon, Camera, Users, ChevronRight, History, HardDrive, Bell } from 'lucide-react';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { LayoutGrid, LogOut } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -67,7 +67,7 @@ export default function SettingsPage() {
                         <SidebarMenuItem>
                             <Link href="/events" className="w-full">
                                 <SidebarMenuButton tooltip="Events">
-                                <History />
+                                <Bell />
                                 <span className="group-data-[collapsible=icon]:hidden">Events</span>
                                 </SidebarMenuButton>
                             </Link>

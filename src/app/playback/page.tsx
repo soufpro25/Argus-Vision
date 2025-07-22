@@ -4,7 +4,7 @@
 import Playback from '@/components/playback';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import Link from 'next/link';
-import { History, LayoutGrid, LogOut, Settings, Server } from 'lucide-react';
+import { History, LayoutGrid, LogOut, Settings, Bell } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
@@ -55,7 +55,7 @@ export default function PlaybackPage() {
                         <SidebarMenuItem>
                             <Link href="/events" className="w-full">
                                 <SidebarMenuButton tooltip="Events">
-                                <History />
+                                <Bell />
                                 <span className="group-data-[collapsible=icon]:hidden">Events</span>
                                 </SidebarMenuButton>
                             </Link>

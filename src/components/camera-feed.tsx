@@ -11,7 +11,6 @@ import { VideoStream, type VideoStreamRef } from './video-stream';
 interface CameraFeedProps {
   camera: Camera;
   onFullscreen: (camera: Camera) => void;
-  showAdminControls: boolean;
 }
 
 export interface CameraFeedHandle {
@@ -19,7 +18,7 @@ export interface CameraFeedHandle {
 }
 
 export const CameraFeed = forwardRef<CameraFeedHandle, CameraFeedProps>(
-  ({ camera, onFullscreen, showAdminControls }, ref) => {
+  ({ camera, onFullscreen }, ref) => {
     const videoStreamRef = useRef<VideoStreamRef>(null);
 
     useImperativeHandle(ref, () => ({
