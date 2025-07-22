@@ -52,7 +52,7 @@ export const VideoStream = forwardRef<VideoStreamRef, VideoStreamProps>(
         videoElement.crossOrigin = 'anonymous';
 
         const onError = () => {
-            console.error(`Error playing video stream from: ${streamUrl}. This format may not be supported by your browser.`);
+            console.warn(`Could not play video stream from: ${streamUrl}. This is expected for non-web formats like RTSP. Falling back to thumbnail.`);
             setIsError(true);
         };
         
