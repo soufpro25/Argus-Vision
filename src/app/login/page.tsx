@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -31,9 +31,9 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   
   const [hasUsers, setHasUsers] = useState(false);
-  useState(() => {
+  useEffect(() => {
     setHasUsers(getUsers().length > 0);
-  });
+  }, []);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),

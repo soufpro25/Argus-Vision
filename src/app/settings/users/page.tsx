@@ -26,9 +26,24 @@ import { Logo } from '@/components/logo';
 const userSchema = z.object({
   id: z.string().optional(),
   username: z.string().min(1, 'Username is required'),
-  password: z.string().min(6, 'Password must be at least 6 characters').optional().or(z.literal('')),
+  password: z.string().optional().or(z.literal('')),
   role: z.enum(['admin', 'viewer']),
+}).refine(data => {
+    // If it's a new user (no id), password must be provided.
+    // If it's an existing user, password can be blank.
+    if (!data.id && (!data.password || data.password.length < 6)) {
+        return false;
+    }
+    // If password is provided for an existing user, it must be long enough
+    if (data.id && data.password && data.password.length < 6) {
+        return false;
+    }
+    return true;
+}, {
+    message: "Password must be at least 6 characters for new users.",
+    path: ["password"],
 });
+
 
 type UserFormValues = z.infer<typeof userSchema>;
 
