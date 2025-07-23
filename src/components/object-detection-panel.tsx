@@ -96,9 +96,9 @@ export function ObjectDetectionPanel({ open, onOpenChange, camera, initialFrame 
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>Object Detection</SheetTitle>
+          <SheetTitle>Smart Object Detection</SheetTitle>
           <SheetDescription>
-            Analyze a frame for objects. {camera ? `Using feed from ${camera.name}.` : 'Upload a custom image.'}
+            Analyze a frame for objects using AI. {camera ? `Using a frame from ${camera.name}.` : 'Upload a custom image.'}
           </SheetDescription>
         </SheetHeader>
         <div className="grid gap-6 py-4">
@@ -109,14 +109,14 @@ export function ObjectDetectionPanel({ open, onOpenChange, camera, initialFrame 
                 <Image src={imagePreview} alt="Frame to analyze" layout="fill" objectFit="contain" />
                 {result?.filteredObjects && result.filteredObjects.map((obj, index) => (
                     <div key={index} 
-                         className="absolute border-2 border-accent rounded-sm"
+                         className="absolute border-2 border-primary/70 bg-primary/20 rounded-sm"
                          style={{ 
                             left: `${obj.box[0] * 100}%`, 
                             top: `${obj.box[1] * 100}%`,
                             width: `${(obj.box[2] - obj.box[0]) * 100}%`,
                             height: `${(obj.box[3] - obj.box[1]) * 100}%`,
                          }}>
-                        <span className="absolute -top-6 left-0 bg-accent text-accent-foreground text-xs px-1 py-0.5 rounded-sm">
+                        <span className="absolute -top-6 left-0 bg-primary text-primary-foreground text-xs px-1.5 py-0.5 rounded">
                             {obj.label} ({(obj.confidence * 100).toFixed(0)}%)
                         </span>
                     </div>
@@ -176,7 +176,7 @@ export function ObjectDetectionPanel({ open, onOpenChange, camera, initialFrame 
 
         <SheetFooter className="mt-6">
           <Button onClick={handleSubmit} disabled={isLoading || !imagePreview}>
-            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ScanSearch className="mr-2 h-4 w-4" />}
             Detect Objects
           </Button>
         </SheetFooter>

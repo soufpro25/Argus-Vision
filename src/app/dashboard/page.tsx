@@ -3,7 +3,7 @@
 
 import { useState, useTransition, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { History, LayoutGrid, Settings, Wand2, Loader2, CircleDot, LogOut, Video, Bell } from 'lucide-react';
+import { History, LayoutGrid, Settings, Wand2, Loader2, CircleDot, LogOut, Video, Bell, ScanSearch } from 'lucide-react';
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger
 } from '@/components/ui/sidebar';
@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import type { Camera, Layout, Recording, Event } from '@/lib/types';
 import { CameraFeed, FullscreenView, type CameraFeedHandle } from '@/components/camera-feed';
 import { LayoutManager } from '@/components/layout-manager';
+import { ObjectDetectionPanel } from '@/components/object-detection-panel';
 import { useToast } from '@/hooks/use-toast';
 import { summarizeRecordingAction } from '../actions';
 import { getCameras, getLayouts, getRecordings } from '@/lib/storage';
@@ -30,6 +31,9 @@ export default function Dashboard() {
   const [activeLayout, setActiveLayout] = useState<Layout | null>(null);
   const [fullscreenCamera, setFullscreenCamera] = useState<Camera | null>(null);
   const [isLayoutManagerOpen, setIsLayoutManagerOpen] = useState(false);
+  const [isObjectPanelOpen, setIsObjectPanelOpen] = useState(false);
+  const [objectPanelCamera, setObjectPanelCamera] = useState<Camera | null>(null);
+  const [objectPanelFrame, setObjectPanelFrame] = useState<string | null>(null);
   const [isRecordingPending, startRecordingTransition] = useTransition();
   const { toast } = useToast();
   const { user, logout } = useAuth();
@@ -89,6 +93,13 @@ export default function Dashboard() {
     
     await processRecording(firstCamera);
   };
+
+  const handleOpenObjectDetection = (camera: Camera) => {
+    const frame = cameraFeedRefs.current.get(camera.id)?.captureFrame();
+    setObjectPanelCamera(camera);
+    setObjectPanelFrame(frame ?? null);
+    setIsObjectPanelOpen(true);
+  }
   
   const processRecording = async (camera: Camera) => {
     const cameraRef = cameraFeedRefs.current.get(camera.id);
@@ -278,6 +289,10 @@ export default function Dashboard() {
               </Select>
               {user?.role === 'admin' && (
                 <>
+                  <Button variant="outline" onClick={() => setIsObjectPanelOpen(true)}>
+                      <ScanSearch className="mr-0 md:mr-2 h-4 w-4"/>
+                      <span className="hidden md:inline">Detect Objects</span>
+                  </Button>
                   <Button onClick={() => setIsLayoutManagerOpen(true)}>
                       <Wand2 className="mr-0 md:mr-2 h-4 w-4"/>
                       <span className="hidden md:inline">Manage Layouts</span>
@@ -313,6 +328,7 @@ export default function Dashboard() {
                             ref={(el) => cameraFeedRefs.current.set(camera.id, el)}
                             camera={camera} 
                             onFullscreen={setFullscreenCamera}
+                            onDetectObjects={handleOpenObjectDetection}
                         />
                         ) : (
                         <div className="h-full w-full flex items-center justify-center bg-muted/50 rounded-lg">
@@ -357,7 +373,12 @@ export default function Dashboard() {
         layouts={layouts}
         onLayoutsUpdate={onLayoutsUpdate} 
       />
+       <ObjectDetectionPanel
+        open={isObjectPanelOpen}
+        onOpenChange={setIsObjectPanelOpen}
+        camera={objectPanelCamera}
+        initialFrame={objectPanelFrame}
+      />
     </SidebarProvider>
   );
 }
-

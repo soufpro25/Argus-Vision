@@ -4,13 +4,15 @@
 import { useRef, useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Expand, Minimize } from 'lucide-react';
+import { Expand, Minimize, ScanSearch } from 'lucide-react';
 import type { Camera } from '@/lib/types';
 import { VideoStream, type VideoStreamRef } from './video-stream';
+import { useAuth } from '@/hooks/use-auth';
 
 interface CameraFeedProps {
   camera: Camera;
   onFullscreen: (camera: Camera) => void;
+  onDetectObjects: (camera: Camera) => void;
 }
 
 export interface CameraFeedHandle {
@@ -18,8 +20,9 @@ export interface CameraFeedHandle {
 }
 
 export const CameraFeed = forwardRef<CameraFeedHandle, CameraFeedProps>(
-  ({ camera, onFullscreen }, ref) => {
+  ({ camera, onFullscreen, onDetectObjects }, ref) => {
     const videoStreamRef = useRef<VideoStreamRef>(null);
+    const { user } = useAuth();
 
     useImperativeHandle(ref, () => ({
       captureFrame: () => {
@@ -39,6 +42,12 @@ export const CameraFeed = forwardRef<CameraFeedHandle, CameraFeedProps>(
                   <Expand className="h-4 w-4" />
                   <span className="sr-only">Fullscreen</span>
               </Button>
+               {user?.role === 'admin' && (
+                 <Button variant="ghost" size="icon" className="h-9 w-9 bg-black/50 backdrop-blur-sm hover:bg-black/70 text-white rounded-full" onClick={() => onDetectObjects(camera)}>
+                    <ScanSearch className="h-4 w-4" />
+                    <span className="sr-only">Detect Objects</span>
+                </Button>
+               )}
           </div>
         </CardContent>
       </Card>
