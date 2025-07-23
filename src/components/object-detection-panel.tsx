@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { detectObjectsAction } from '@/app/actions';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, ScanSearch } from 'lucide-react';
 import type { SmartObjectDetectionOutput } from '@/ai/flows/smart-object-detection';
 import type { Camera } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
