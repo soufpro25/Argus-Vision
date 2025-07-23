@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local Camera Stream</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #000;
+            font-family: sans-serif;
+            color: #fff;
+        }
+        video {
+            width: 90%;
+            max-width: 1280px;
+            border: 1px solid #333;
+        }
+        .container {
+            text-align: center;
+        }
+        .url-info {
+            margin-top: 1rem;
+            color: #ccc;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Local Camera Feed</h1>
+        <video id="video" controls autoplay muted></video>
+        <div class="url-info">
+            <p>Attempting to play stream from: <strong id="stream-url-display"></strong></p>
+            <p>If the stream is not playing, ensure FFmpeg and the local web server are running correctly.</p>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const video = document.getElementById('video');
+            
+            // --- CONFIGURATION ---
+            // Replace this with the IP address of the server running FFmpeg and the web server.
+            const serverIp = window.location.hostname; 
+            const serverPort = '8080';
+            const streamPath = '/stream/stream.m3u8';
+            // ---------------------
+
+            const streamUrl = `http://${serverIp}:${serverPort}${streamPath}`;
+            document.getElementById('stream-url-display').textContent = streamUrl;
+
+            if (Hls.isSupported()) {
+                const hls = new Hls();
+                hls.loadSource(streamUrl);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                    video.play();
+                });
+                hls.on(Hls.Events.ERROR, (event, data) => {
+                    if (data.fatal) {
+                        console.error('Fatal HLS error:', data);
+                    }
+                });
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                // For Safari and some other browsers that support HLS natively
+                video.src = streamUrl;
+                video.addEventListener('loadedmetadata', () => {
+                    video.play();
+                });
+            }
+        });
+    </script>
+
+</body>
+</html>
