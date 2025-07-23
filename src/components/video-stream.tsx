@@ -4,6 +4,7 @@
 import { forwardRef, useImperativeHandle, useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import { ShieldAlert } from 'lucide-react';
+import Hls from 'hls.js';
 
 interface VideoStreamProps {
   streamUrl: string;
@@ -31,42 +32,59 @@ export const VideoStream = forwardRef<VideoStreamRef, VideoStreamProps>(
             return canvas.toDataURL('image/jpeg');
           }
         }
-        // Fallback to thumbnail if video isn't ready or has failed
         return thumbnailUrl;
       },
     }));
     
     useEffect(() => {
       const videoElement = videoRef.current;
-      if (videoElement) {
-        setIsError(false);
-        // We will try to play the user-provided streamUrl.
-        // NOTE: Browsers do NOT support RTSP natively. This will only work for web-friendly formats
-        // like MP4, HLS (.m3u8), or DASH (.mpd) if the browser supports them.
-        // A proper implementation requires a media server to transcode RTSP.
-        console.info(`Attempting to play stream: ${streamUrl}. For this to work, it must be in a web-compatible format (not RTSP).`);
-        
-        videoElement.src = streamUrl;
-        videoElement.loop = true;
-        videoElement.muted = true;
-        videoElement.crossOrigin = 'anonymous';
+      if (!videoElement) return;
 
-        const onError = () => {
-            console.warn(`Could not play video stream from: ${streamUrl}. This is expected for non-web formats like RTSP. Falling back to thumbnail.`);
-            setIsError(true);
-        };
-        
-        videoElement.addEventListener('error', onError);
+      setIsError(false);
+      let hls: Hls | null = null;
 
-        videoElement.play().catch(error => {
-            console.warn('Autoplay was prevented or failed for the stream.', error);
-            // Don't set error state here, as the stream might still be valid but just requires user interaction to play.
-            // The onerror listener will catch critical failures.
-        });
+      const onError = () => {
+        console.warn(`Could not play video stream from: ${streamUrl}. This is expected for non-web formats like RTSP. Falling back to thumbnail.`);
+        setIsError(true);
+      };
 
-        return () => {
-            videoElement.removeEventListener('error', onError);
+      if (streamUrl.endsWith('.m3u8')) {
+        if (Hls.isSupported()) {
+          console.info('HLS stream detected. Attempting to play with hls.js.');
+          hls = new Hls();
+          hls.loadSource(streamUrl);
+          hls.attachMedia(videoElement);
+          hls.on(Hls.Events.ERROR, (event, data) => {
+            if (data.fatal) {
+              console.error('HLS.js fatal error:', data);
+              onError();
+            }
+          });
+        } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
+          console.info('HLS supported natively by browser.');
+          videoElement.src = streamUrl;
+        } else {
+           onError();
         }
+      } else {
+        console.info(`Attempting to play direct stream: ${streamUrl}. For this to work, it must be in a web-compatible format (not RTSP).`);
+        videoElement.src = streamUrl;
+      }
+      
+      videoElement.loop = true;
+      videoElement.muted = true;
+      videoElement.crossOrigin = 'anonymous';
+      videoElement.addEventListener('error', onError);
+
+      videoElement.play().catch(error => {
+          console.warn('Autoplay was prevented or failed for the stream.', error);
+      });
+
+      return () => {
+          if (hls) {
+            hls.destroy();
+          }
+          videoElement.removeEventListener('error', onError);
       }
     }, [streamUrl]);
 
