@@ -30,16 +30,16 @@ const userSchema = z.object({
   role: z.enum(['admin', 'viewer']),
 }).refine(data => {
     // If it's a new user (no id), password must be provided and be long enough.
-    if (!data.id && (!data.password || data.password.length < 6)) {
-        return false;
+    if (!data.id) {
+        return !!data.password && data.password.length >= 6;
     }
     // If a password IS provided for an existing user, it must be long enough.
-    if (data.id && data.password && data.password.length > 0 && data.password.length < 6) {
-        return false;
+    if (data.id && data.password) {
+        return data.password.length >= 6;
     }
     return true;
 }, {
-    message: "Password must be at least 6 characters.",
+    message: "Password is required and must be at least 6 characters.",
     path: ["password"],
 });
 
