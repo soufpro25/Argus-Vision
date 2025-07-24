@@ -30,7 +30,6 @@ const cameraSchema = z.object({
   description: z.string().min(1, 'Description is required'),
   streamUrl: z.string().min(1, 'Stream URL is required').url('Must be a valid URL'),
   thumbnailUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')),
-  server: z.string().optional(),
 });
 
 type CameraFormValues = z.infer<typeof cameraSchema>;
@@ -61,7 +60,6 @@ export default function CamerasSettingsPage() {
             description: '',
             streamUrl: '',
             thumbnailUrl: '',
-            server: '',
         },
     });
 
@@ -98,7 +96,7 @@ export default function CamerasSettingsPage() {
         if (camera) {
             form.reset(camera);
         } else {
-            form.reset({ name: '', description: '', streamUrl: '', thumbnailUrl: '', server: '' });
+            form.reset({ name: '', description: '', streamUrl: '', thumbnailUrl: '' });
         }
         setIsDialogOpen(true);
     };
@@ -300,19 +298,6 @@ export default function CamerasSettingsPage() {
                                                     <FormLabel>Thumbnail URL (Optional)</FormLabel>
                                                     <FormControl>
                                                         <Input placeholder="https://placehold.co/800x600.png" {...field} />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                        <FormField
-                                            control={form.control}
-                                            name="server"
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>Server Name (Optional)</FormLabel>
-                                                    <FormControl>
-                                                        <Input placeholder="e.g., Server 1" {...field} />
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
