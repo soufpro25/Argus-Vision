@@ -218,7 +218,6 @@ export default function CamerasSettingsPage() {
                                             <div className="flex-grow">
                                                 <p className="font-semibold flex items-center gap-2">
                                                     {camera.name}
-                                                    {camera.server && <Badge variant="secondary">{camera.server}</Badge>}
                                                 </p>
                                                 <p className="text-sm text-muted-foreground truncate">{camera.description}</p>
                                                 <p className="text-xs text-muted-foreground/50 font-mono truncate">{camera.streamUrl}</p>
