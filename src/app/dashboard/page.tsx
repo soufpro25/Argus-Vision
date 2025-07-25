@@ -3,7 +3,7 @@
 
 import { useState, useTransition, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { History, LayoutGrid, Settings, Wand2, Loader2, CircleDot, LogOut, Video, Bell, ScanSearch } from 'lucide-react';
+import { History, LayoutGrid, Settings, Wand2, Loader2, CircleDot, LogOut, Video, Bell, ScanSearch, FileText } from 'lucide-react';
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger
 } from '@/components/ui/sidebar';
@@ -14,7 +14,7 @@ import { CameraFeed, FullscreenView, type CameraFeedHandle } from '@/components/
 import { LayoutManager } from '@/components/layout-manager';
 import { ObjectDetectionPanel } from '@/components/object-detection-panel';
 import { useToast } from '@/hooks/use-toast';
-import { summarizeRecordingAction } from '../actions';
+import { summarizeRecordingAction, generateReportAction } from '../actions';
 import { getCameras, getLayouts, getRecordings } from '@/lib/storage';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
@@ -35,6 +35,7 @@ export default function Dashboard() {
   const [objectPanelCamera, setObjectPanelCamera] = useState<Camera | null>(null);
   const [objectPanelFrame, setObjectPanelFrame] = useState<string | null>(null);
   const [isRecordingPending, startRecordingTransition] = useTransition();
+  const [isReportPending, startReportTransition] = useTransition();
   const { toast } = useToast();
   const { user, logout } = useAuth();
   const router = useRouter();
@@ -74,6 +75,56 @@ export default function Dashboard() {
     router.push('/login');
     toast({ title: "Logged out successfully." });
   }
+
+  const handleGenerateReport = () => {
+    if (!activeLayout || activeLayout.grid.cameras.length === 0) {
+        toast({
+            variant: 'destructive',
+            title: 'No Cameras in View',
+            description: 'Cannot generate a report with an empty layout.',
+        });
+        return;
+    }
+
+    const cameraFeeds = activeLayout.grid.cameras
+        .map(cameraId => {
+            if (!cameraId) return null;
+            const camera = getCameraById(cameraId);
+            const frame = cameraFeedRefs.current.get(cameraId)?.captureFrame();
+            if (!camera || !frame) return null;
+            return { cameraName: camera.name, videoDataUri: frame };
+        })
+        .filter(Boolean);
+        
+    if (cameraFeeds.length === 0) {
+        toast({
+            variant: 'destructive',
+            title: 'Could Not Capture Frames',
+            description: 'Failed to get a snapshot from active cameras.',
+        });
+        return;
+    }
+
+    startReportTransition(async () => {
+        toast({ title: 'Generating Situation Report...', description: 'The AI is analyzing all active camera feeds.' });
+        const response = await generateReportAction({ cameraFeeds: cameraFeeds as any });
+
+        if (response.success && response.data) {
+            toast({
+                title: 'AI Situation Report',
+                description: response.data.report,
+                duration: 8000,
+            });
+        } else {
+            toast({
+                variant: 'destructive',
+                title: 'Report Generation Failed',
+                description: response.error,
+            });
+        }
+    });
+  }
+
 
   const handleManualRecord = async () => {
     const firstCamera = cameras[0];
@@ -289,6 +340,15 @@ export default function Dashboard() {
               </Select>
               {user?.role === 'admin' && (
                 <>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="outline" onClick={handleGenerateReport} disabled={isReportPending || cameras.length === 0}>
+                            {isReportPending ? <Loader2 className="mr-0 md:mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-0 md:mr-2 h-4 w-4" />}
+                            <span className="hidden md:inline">Report</span>
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Generate AI Situation Report</TooltipContent>
+                  </Tooltip>
                   <Button variant="outline" onClick={() => setIsObjectPanelOpen(true)}>
                       <ScanSearch className="mr-0 md:mr-2 h-4 w-4"/>
                       <span className="hidden md:inline">Detect Objects</span>
