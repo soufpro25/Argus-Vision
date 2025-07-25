@@ -5,6 +5,8 @@ import { summarizeRecording, type SummarizeRecordingInput } from '@/ai/flows/sum
 import { smartObjectDetection, type SmartObjectDetectionInput } from '@/ai/flows/smart-object-detection';
 import { generateSituationReport, type SituationReportInput } from '@/ai/flows/situation-report';
 import type { Camera } from '@/lib/types';
+import { saveCameras as saveCamerasToServer } from '@/lib/storage.server';
+
 
 export async function suggestLayoutAction(cameras: { cameraId: string, locationDescription: string, server?: string }[]) {
   try {
@@ -43,5 +45,17 @@ export async function generateReportAction(input: SituationReportInput) {
     } catch (error) {
         console.error('Error generating report:', error);
         return { success: false, error: 'Failed to generate report.' };
+    }
+}
+
+// This is a new server action to keep the server "DB" in sync
+export async function syncCamerasWithServer(cameras: Camera[]) {
+    // In a real app, this would be a proper API call to a secure backend.
+    // For this demo, we're using a server-side function.
+    try {
+        saveCamerasToServer(cameras);
+    } catch (e) {
+        console.error("Failed to sync cameras with server", e);
+        // This failure is silent to the user in this context, but in a real app you'd handle it.
     }
 }

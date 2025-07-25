@@ -24,6 +24,7 @@ import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Logo } from '@/components/logo';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { syncCamerasWithServer } from '@/app/actions';
 
 const cameraSchema = z.object({
   id: z.string().optional(),
@@ -34,20 +35,6 @@ const cameraSchema = z.object({
 });
 
 type CameraFormValues = z.infer<typeof cameraSchema>;
-
-// This is a new server action to keep the server "DB" in sync
-async function syncCamerasWithServer(cameras: Camera[]) {
-    'use server';
-    // In a real app, this would be a proper API call to a secure backend.
-    // For this demo, we're using a server-side function.
-    try {
-        const { saveCameras: saveCamerasToServer } = await import('@/lib/storage.server');
-        saveCamerasToServer(cameras);
-    } catch (e) {
-        console.error("Failed to sync cameras with server", e);
-        // This failure is silent to the user in this context, but in a real app you'd handle it.
-    }
-}
 
 
 export default function CamerasSettingsPage() {
