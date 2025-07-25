@@ -31,6 +31,11 @@ export function getCameras(): Camera[] {
     return safelyParseJSON<Camera[]>(stored, []);
 }
 
+export function saveCameras(cameras: Camera[]): void {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem('cameras', JSON.stringify(cameras));
+}
+
 // Layouts
 export function getLayouts(): Layout[] {
     if (typeof window === 'undefined') return [];

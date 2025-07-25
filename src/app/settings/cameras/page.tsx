@@ -12,9 +12,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Plus, Edit, Trash2, Camera as CameraIcon, ArrowLeft, History, Bell } from 'lucide-react';
+import { Plus, Edit, Trash2, Camera as CameraIcon, ArrowLeft, History, Bell, Info } from 'lucide-react';
 import type { Camera } from '@/lib/types';
-import { getCameras } from '@/lib/storage';
+import { getCameras, saveCameras } from '@/lib/storage'; // Note: using client-side storage for UI
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
@@ -23,6 +23,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Logo } from '@/components/logo';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const cameraSchema = z.object({
   id: z.string().optional(),
@@ -34,6 +35,21 @@ const cameraSchema = z.object({
 
 type CameraFormValues = z.infer<typeof cameraSchema>;
 
+// This is a new server action to keep the server "DB" in sync
+async function syncCamerasWithServer(cameras: Camera[]) {
+    'use server';
+    // In a real app, this would be a proper API call to a secure backend.
+    // For this demo, we're using a server-side function.
+    try {
+        const { saveCameras: saveCamerasToServer } = await import('@/lib/storage.server');
+        saveCamerasToServer(cameras);
+    } catch (e) {
+        console.error("Failed to sync cameras with server", e);
+        // This failure is silent to the user in this context, but in a real app you'd handle it.
+    }
+}
+
+
 export default function CamerasSettingsPage() {
     const [cameras, setCameras] = useState<Camera[]>([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -41,9 +57,12 @@ export default function CamerasSettingsPage() {
     const { toast } = useToast();
     const { user, logout } = useAuth();
     const router = useRouter();
+    const [apiUrl, setApiUrl] = useState('');
 
     useEffect(() => {
         setCameras(getCameras());
+        // Construct the API URL on the client-side
+        setApiUrl(`${window.location.origin}/api/cameras`);
     }, []);
 
     const handleLogout = () => {
@@ -63,6 +82,12 @@ export default function CamerasSettingsPage() {
         },
     });
 
+    const updateCameras = (newCameras: Camera[]) => {
+        setCameras(newCameras);
+        saveCameras(newCameras); // Saves to client localStorage
+        syncCamerasWithServer(newCameras); // Syncs with server-side "DB"
+    };
+
     const handleSaveChanges = (values: CameraFormValues) => {
         const newCameras = [...cameras];
         const thumbnailUrl = values.thumbnailUrl || `https://placehold.co/800x600.png`;
@@ -81,8 +106,7 @@ export default function CamerasSettingsPage() {
             newCameras.push(newCamera);
         }
 
-        setCameras(newCameras);
-        localStorage.setItem('cameras', JSON.stringify(newCameras));
+        updateCameras(newCameras);
         toast({
             title: `Camera ${editingCamera ? 'updated' : 'added'}`,
             description: `Camera "${values.name}" has been saved.`,
@@ -103,8 +127,7 @@ export default function CamerasSettingsPage() {
 
     const handleDeleteCamera = (cameraId: string) => {
         const newCameras = cameras.filter(c => c.id !== cameraId);
-        setCameras(newCameras);
-        localStorage.setItem('cameras', JSON.stringify(newCameras));
+        updateCameras(newCameras);
         toast({
             variant: 'destructive',
             title: 'Camera Deleted',
@@ -198,6 +221,16 @@ export default function CamerasSettingsPage() {
                                 <Plus className="mr-2 h-4 w-4" /> Add Camera
                             </Button>
                         </header>
+                        
+                        <Alert className="mb-6">
+                          <Info className="h-4 w-4" />
+                          <AlertTitle>Using the Server Script?</AlertTitle>
+                          <AlertDescription>
+                            Your camera list API endpoint is: <code className="font-mono text-xs bg-muted p-1 rounded-sm">{apiUrl}</code>
+                            <br/>
+                            Update your server script to use this URL to fetch the camera list automatically.
+                          </AlertDescription>
+                        </Alert>
 
                         <Card>
                             <CardHeader>
