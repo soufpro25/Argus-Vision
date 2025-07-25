@@ -19,17 +19,15 @@ export const VideoStream = forwardRef<VideoStreamRef, VideoStreamProps>(
   ({ camera }, ref) => {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isError, setIsError] = useState(false);
-
-    // Construct the HLS stream URL based on the camera ID.
-    // This assumes the Python manager script is running on the local network.
-    // In a real production app, this URL would come from a config or API.
     const [hlsUrl, setHlsUrl] = useState('');
 
     useEffect(() => {
-        // We construct the URL on the client to get the correct origin.
-        // The camera ID is used as the path.
-        const serverIp = window.location.hostname; // Assumes manager is on the same machine as the user is accessing from
-        setHlsUrl(`http://${serverIp}:8080/${camera.id}/stream.m3u8`);
+        // Construct the HLS stream URL based on the camera ID and the current window's hostname.
+        // This assumes the Python manager script is running on the same network.
+        if (typeof window !== 'undefined') {
+            const serverIp = window.location.hostname; // Assumes manager is on the same machine as the user is accessing from
+            setHlsUrl(`http://${serverIp}:8080/${camera.id}/stream.m3u8`);
+        }
     }, [camera.id]);
 
 
@@ -92,7 +90,9 @@ export const VideoStream = forwardRef<VideoStreamRef, VideoStreamProps>(
           if (hls) {
             hls.destroy();
           }
-          videoElement.removeEventListener('error', onError);
+          if (videoElement) {
+            videoElement.removeEventListener('error', onError);
+          }
       }
     }, [hlsUrl]);
 

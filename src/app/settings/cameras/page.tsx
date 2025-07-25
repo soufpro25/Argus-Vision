@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Plus, Edit, Trash2, Camera as CameraIcon, ArrowLeft, History, Bell, Info } from 'lucide-react';
 import type { Camera } from '@/lib/types';
-import { getCameras, saveCameras } from '@/lib/storage'; // Note: using client-side storage for UI
+import { getCameras, saveCameras as saveCamerasToLocalStorage } from '@/lib/storage'; // Note: using client-side storage for UI
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
@@ -49,6 +49,7 @@ export default function CamerasSettingsPage() {
     const [apiUrl, setApiUrl] = useState('');
 
     useEffect(() => {
+        // Load initial cameras from localStorage for quick UI, but the server is the source of truth.
         setCameras(getCameras());
         // Construct the API URL on the client-side
         setApiUrl(`${window.location.origin}/api/cameras`);
@@ -71,10 +72,10 @@ export default function CamerasSettingsPage() {
         },
     });
 
-    const updateCameras = (newCameras: Camera[]) => {
+    const updateCameras = async (newCameras: Camera[]) => {
         setCameras(newCameras);
-        saveCameras(newCameras); // Saves to client localStorage
-        syncCamerasWithServer(newCameras); // Syncs with server-side "DB"
+        saveCamerasToLocalStorage(newCameras); // Saves to client localStorage for optimistic UI
+        await syncCamerasWithServer(newCameras); // Syncs with server-side "DB"
     };
 
     const handleSaveChanges = (values: CameraFormValues) => {
@@ -213,7 +214,7 @@ export default function CamerasSettingsPage() {
                         
                         <Alert className="mb-6">
                           <Info className="h-4 w-4" />
-                          <AlertTitle>Using the Server Manager Script?</AlertTitle>
+                          <AlertTitle>Using the Camera Manager Script?</AlertTitle>
                           <AlertDescription>
                             Your camera list API endpoint is: <code className="font-mono text-xs bg-muted p-1 rounded-sm">{apiUrl}</code>
                             <br/>
@@ -303,7 +304,7 @@ export default function CamerasSettingsPage() {
                                             name="streamUrl"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Stream URL</FormLabel>
+                                                    <FormLabel>Stream URL (RTSP)</FormLabel>
                                                     <FormControl>
                                                         <Input placeholder="rtsp://..." {...field} />
                                                     </FormControl>
