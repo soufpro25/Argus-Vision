@@ -22,10 +22,10 @@ export const VideoStream = forwardRef<VideoStreamRef, VideoStreamProps>(
     const [hlsUrl, setHlsUrl] = useState('');
 
     useEffect(() => {
-        // Construct the HLS stream URL.
-        // It uses an environment variable for the host, falling back to the window's hostname on port 8080.
-        const streamHost = process.env.NEXT_PUBLIC_STREAMING_HOST || `http://${window.location.hostname}:8080`;
-        const constructedUrl = `${streamHost}/${camera.id}/stream.m3u8`;
+        // Construct the HLS stream URL using environment variables for configuration.
+        const streamHost = process.env.NEXT_PUBLIC_STREAMING_HOST || `http://${window.location.hostname}`;
+        const streamPort = process.env.NEXT_PUBLIC_STREAMING_PORT || '8080';
+        const constructedUrl = `${streamHost}:${streamPort}/${camera.id}/stream.m3u8`;
         setHlsUrl(constructedUrl);
     }, [camera.id]);
 
@@ -62,8 +62,7 @@ export const VideoStream = forwardRef<VideoStreamRef, VideoStreamProps>(
 
       if (Hls.isSupported()) {
         hls = new Hls({
-            // Add some configuration for robustness
-            startLevel: -1, // Auto-start level
+            startLevel: -1, 
             fragLoadingMaxRetry: 4,
             manifestLoadingMaxRetry: 4,
         });
@@ -89,7 +88,6 @@ export const VideoStream = forwardRef<VideoStreamRef, VideoStreamProps>(
 
       videoElement.play().catch(error => {
           console.warn('Autoplay was prevented for the HLS stream.', error);
-          // Try to play again without sound, which is a common browser policy restriction
           videoElement.muted = true;
           videoElement.play().catch(finalError => {
             console.error('Final autoplay attempt failed.', finalError);
@@ -140,4 +138,4 @@ export const VideoStream = forwardRef<VideoStreamRef, VideoStreamProps>(
   }
 );
 
-VideoStream.displayName = 'VideoStream';
+VideoStream.displayName
