@@ -30,7 +30,9 @@ const cameraSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(1, 'Name is required'),
   description: z.string().min(1, 'Description is required'),
-  streamUrl: z.string().min(1, 'Stream URL is required').url('Must be a valid URL'),
+  streamUrl: z.string().min(1, 'Stream URL is required').refine(val => val.startsWith('rtsp://'), {
+    message: 'For local streams, please use the RTSP URL (rtsp://...). The server will handle transcoding.'
+  }),
   thumbnailUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')),
 });
 
@@ -211,11 +213,11 @@ export default function CamerasSettingsPage() {
                         
                         <Alert className="mb-6">
                           <Info className="h-4 w-4" />
-                          <AlertTitle>Using the Server Script?</AlertTitle>
+                          <AlertTitle>Using the Server Manager Script?</AlertTitle>
                           <AlertDescription>
                             Your camera list API endpoint is: <code className="font-mono text-xs bg-muted p-1 rounded-sm">{apiUrl}</code>
                             <br/>
-                            Update your server script to use this URL to fetch the camera list automatically.
+                            Make sure the `camera_manager.py` script on your server is using this URL.
                           </AlertDescription>
                         </Alert>
 
@@ -240,7 +242,7 @@ export default function CamerasSettingsPage() {
                                                     {camera.name}
                                                 </p>
                                                 <p className="text-sm text-muted-foreground truncate">{camera.description}</p>
-                                                <p className="text-xs text-muted-foreground/50 font-mono truncate">{camera.streamUrl}</p>
+                                                <p className="text-xs text-muted-foreground/50 font-mono" title={camera.id}>ID: {camera.id}</p>
                                             </div>
                                             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(camera)}>

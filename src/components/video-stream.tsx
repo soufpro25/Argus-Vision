@@ -5,10 +5,10 @@ import { forwardRef, useImperativeHandle, useRef, useState, useEffect } from 're
 import Image from 'next/image';
 import { ShieldAlert } from 'lucide-react';
 import Hls from 'hls.js';
+import type { Camera } from '@/lib/types';
 
 interface VideoStreamProps {
-  streamUrl: string;
-  thumbnailUrl: string;
+  camera: Camera;
 }
 
 export interface VideoStreamRef {
@@ -16,9 +16,22 @@ export interface VideoStreamRef {
 }
 
 export const VideoStream = forwardRef<VideoStreamRef, VideoStreamProps>(
-  ({ streamUrl, thumbnailUrl }, ref) => {
+  ({ camera }, ref) => {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isError, setIsError] = useState(false);
+
+    // Construct the HLS stream URL based on the camera ID.
+    // This assumes the Python manager script is running on the local network.
+    // In a real production app, this URL would come from a config or API.
+    const [hlsUrl, setHlsUrl] = useState('');
+
+    useEffect(() => {
+        // We construct the URL on the client to get the correct origin.
+        // The camera ID is used as the path.
+        const serverIp = window.location.hostname; // Assumes manager is on the same machine as the user is accessing from
+        setHlsUrl(`http://${serverIp}:8080/${camera.id}/stream.m3u8`);
+    }, [camera.id]);
+
 
     useImperativeHandle(ref, () => ({
       captureFrame: () => {
@@ -32,51 +45,38 @@ export const VideoStream = forwardRef<VideoStreamRef, VideoStreamProps>(
             return canvas.toDataURL('image/jpeg');
           }
         }
-        return thumbnailUrl;
+        return camera.thumbnailUrl;
       },
     }));
     
     useEffect(() => {
+      if (!hlsUrl) return;
+
       const videoElement = videoRef.current;
       if (!videoElement) return;
 
       setIsError(false);
       let hls: Hls | null = null;
       
-      const isWebPlayable = streamUrl.endsWith('.m3u8') || streamUrl.endsWith('.mp4') || streamUrl.endsWith('.webm');
-
-      if (!isWebPlayable) {
-          console.warn(`Stream URL "${streamUrl}" is not a direct web-playable format. Falling back to thumbnail. Use an HLS (.m3u8) stream for live video.`);
-          setIsError(true);
-          return;
-      }
-
       const onError = () => {
-        console.warn(`Could not play video stream from: ${streamUrl}. Falling back to thumbnail.`);
+        console.warn(`Could not play HLS stream from: ${hlsUrl}. Check if the camera manager script is running.`);
         setIsError(true);
       };
 
-      if (streamUrl.endsWith('.m3u8')) {
-        if (Hls.isSupported()) {
-          console.info('HLS stream detected. Attempting to play with hls.js.');
-          hls = new Hls();
-          hls.loadSource(streamUrl);
-          hls.attachMedia(videoElement);
-          hls.on(Hls.Events.ERROR, (event, data) => {
-            if (data.fatal) {
-              console.error('HLS.js fatal error:', data);
-              onError();
-            }
-          });
-        } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
-          console.info('HLS supported natively by browser.');
-          videoElement.src = streamUrl;
-        } else {
-           onError();
-        }
+      if (Hls.isSupported()) {
+        hls = new Hls();
+        hls.loadSource(hlsUrl);
+        hls.attachMedia(videoElement);
+        hls.on(Hls.Events.ERROR, (event, data) => {
+          if (data.fatal) {
+            console.error('HLS.js fatal error:', data);
+            onError();
+          }
+        });
+      } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
+        videoElement.src = hlsUrl;
       } else {
-        console.info(`Attempting to play direct stream: ${streamUrl}.`);
-        videoElement.src = streamUrl;
+         onError();
       }
       
       videoElement.loop = true;
@@ -85,7 +85,7 @@ export const VideoStream = forwardRef<VideoStreamRef, VideoStreamProps>(
       videoElement.addEventListener('error', onError);
 
       videoElement.play().catch(error => {
-          console.warn('Autoplay was prevented or failed for the stream.', error);
+          console.warn('Autoplay was prevented for the HLS stream.', error);
       });
 
       return () => {
@@ -94,13 +94,13 @@ export const VideoStream = forwardRef<VideoStreamRef, VideoStreamProps>(
           }
           videoElement.removeEventListener('error', onError);
       }
-    }, [streamUrl]);
+    }, [hlsUrl]);
 
     if (isError) {
       return (
         <div className="w-full h-full flex flex-col items-center justify-center bg-muted text-muted-foreground relative">
           <Image
-            src={thumbnailUrl}
+            src={camera.thumbnailUrl}
             alt="Video feed fallback"
             data-ai-hint="security camera"
             layout="fill"
@@ -111,7 +111,7 @@ export const VideoStream = forwardRef<VideoStreamRef, VideoStreamProps>(
            <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center p-4 text-center">
                 <ShieldAlert className="h-10 w-10 text-destructive mb-2" />
                 <p className="font-semibold text-white">Live Feed Unavailable</p>
-                <p className="text-xs text-white/80">Browser cannot play this stream. Ensure it's a web-friendly format (not RTSP).</p>
+                <p className="text-xs text-white/80">Check if the camera manager script is running on your server.</p>
            </div>
         </div>
       );
@@ -124,7 +124,7 @@ export const VideoStream = forwardRef<VideoStreamRef, VideoStreamProps>(
         autoPlay
         muted
         playsInline
-        poster={thumbnailUrl}
+        poster={camera.thumbnailUrl}
       />
     );
   }

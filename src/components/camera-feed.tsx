@@ -33,7 +33,7 @@ export const CameraFeed = forwardRef<CameraFeedHandle, CameraFeedProps>(
     return (
       <Card className="flex flex-col h-full w-full bg-card border-0 shadow-none rounded-2xl overflow-hidden relative">
         <CardContent className="p-0 flex-grow relative group/feed">
-          <VideoStream ref={videoStreamRef} streamUrl={camera.streamUrl} thumbnailUrl={camera.thumbnailUrl} />
+          <VideoStream ref={videoStreamRef} camera={camera} />
           <div className="absolute top-3 left-3 flex items-center gap-2">
               <div className="bg-black/50 backdrop-blur-sm text-white text-sm font-medium px-3 py-1 rounded-full">{camera.name}</div>
           </div>
@@ -68,7 +68,7 @@ export function FullscreenView({ camera, onClose }: { camera: Camera, onClose: (
                 </Button>
             </div>
             <div className="flex-grow relative p-4 pt-0">
-                <VideoStream streamUrl={camera.streamUrl} thumbnailUrl={camera.thumbnailUrl} />
+                <VideoStream camera={camera} />
             </div>
         </div>
     );
