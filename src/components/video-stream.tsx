@@ -42,9 +42,17 @@ export const VideoStream = forwardRef<VideoStreamRef, VideoStreamProps>(
 
       setIsError(false);
       let hls: Hls | null = null;
+      
+      const isWebPlayable = streamUrl.endsWith('.m3u8') || streamUrl.endsWith('.mp4') || streamUrl.endsWith('.webm');
+
+      if (!isWebPlayable) {
+          console.warn(`Stream URL "${streamUrl}" is not a direct web-playable format. Falling back to thumbnail. Use an HLS (.m3u8) stream for live video.`);
+          setIsError(true);
+          return;
+      }
 
       const onError = () => {
-        console.warn(`Could not play video stream from: ${streamUrl}. This is expected for non-web formats like RTSP. Falling back to thumbnail.`);
+        console.warn(`Could not play video stream from: ${streamUrl}. Falling back to thumbnail.`);
         setIsError(true);
       };
 
@@ -67,7 +75,7 @@ export const VideoStream = forwardRef<VideoStreamRef, VideoStreamProps>(
            onError();
         }
       } else {
-        console.info(`Attempting to play direct stream: ${streamUrl}. For this to work, it must be in a web-compatible format (not RTSP).`);
+        console.info(`Attempting to play direct stream: ${streamUrl}.`);
         videoElement.src = streamUrl;
       }
       
