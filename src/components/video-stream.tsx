@@ -22,12 +22,11 @@ export const VideoStream = forwardRef<VideoStreamRef, VideoStreamProps>(
     const [hlsUrl, setHlsUrl] = useState('');
 
     useEffect(() => {
-        // Construct the HLS stream URL based on the camera ID and the current window's hostname.
-        // This assumes the Python manager script is running on the same network.
-        if (typeof window !== 'undefined') {
-            const serverIp = window.location.hostname; // Assumes manager is on the same machine as the user is accessing from
-            setHlsUrl(`http://${serverIp}:8080/${camera.id}/stream.m3u8`);
-        }
+        // Construct the HLS stream URL.
+        // It uses an environment variable for the host, falling back to the window's hostname on port 8080.
+        const streamHost = process.env.NEXT_PUBLIC_STREAMING_HOST || `http://${window.location.hostname}:8080`;
+        const constructedUrl = `${streamHost}/${camera.id}/stream.m3u8`;
+        setHlsUrl(constructedUrl);
     }, [camera.id]);
 
 
@@ -62,12 +61,17 @@ export const VideoStream = forwardRef<VideoStreamRef, VideoStreamProps>(
       };
 
       if (Hls.isSupported()) {
-        hls = new Hls();
+        hls = new Hls({
+            // Add some configuration for robustness
+            startLevel: -1, // Auto-start level
+            fragLoadingMaxRetry: 4,
+            manifestLoadingMaxRetry: 4,
+        });
         hls.loadSource(hlsUrl);
         hls.attachMedia(videoElement);
         hls.on(Hls.Events.ERROR, (event, data) => {
           if (data.fatal) {
-            console.error('HLS.js fatal error:', data);
+            console.error('HLS.js fatal error:', data.type, data.details);
             onError();
           }
         });
@@ -79,11 +83,17 @@ export const VideoStream = forwardRef<VideoStreamRef, VideoStreamProps>(
       
       videoElement.loop = true;
       videoElement.muted = true;
+      videoElement.playsInline = true;
       videoElement.crossOrigin = 'anonymous';
       videoElement.addEventListener('error', onError);
 
       videoElement.play().catch(error => {
           console.warn('Autoplay was prevented for the HLS stream.', error);
+          // Try to play again without sound, which is a common browser policy restriction
+          videoElement.muted = true;
+          videoElement.play().catch(finalError => {
+            console.error('Final autoplay attempt failed.', finalError);
+          });
       });
 
       return () => {
@@ -111,7 +121,7 @@ export const VideoStream = forwardRef<VideoStreamRef, VideoStreamProps>(
            <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center p-4 text-center">
                 <ShieldAlert className="h-10 w-10 text-destructive mb-2" />
                 <p className="font-semibold text-white">Live Feed Unavailable</p>
-                <p className="text-xs text-white/80">Check if the camera manager script is running on your server.</p>
+                <p className="text-xs text-white/80">Check camera stream and manager script.</p>
            </div>
         </div>
       );
