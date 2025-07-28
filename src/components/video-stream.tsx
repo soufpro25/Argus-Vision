@@ -23,7 +23,7 @@ export const VideoStream = forwardRef<VideoStreamRef, VideoStreamProps>(
 
     useEffect(() => {
         // Construct the HLS stream URL using environment variables for configuration.
-        const streamHost = process.env.NEXT_PUBLIC_STREAMING_HOST || `http://${window.location.hostname}`;
+        const streamHost = process.env.NEXT_PUBLIC_STREAMING_HOST || `http://localhost`;
         const streamPort = process.env.NEXT_PUBLIC_STREAMING_PORT || '8080';
         const constructedUrl = `${streamHost}:${streamPort}/${camera.id}/stream.m3u8`;
         setHlsUrl(constructedUrl);
@@ -88,6 +88,7 @@ export const VideoStream = forwardRef<VideoStreamRef, VideoStreamProps>(
 
       videoElement.play().catch(error => {
           console.warn('Autoplay was prevented for the HLS stream.', error);
+          // Muting is often required for autoplay to work
           videoElement.muted = true;
           videoElement.play().catch(finalError => {
             console.error('Final autoplay attempt failed.', finalError);
@@ -138,4 +139,4 @@ export const VideoStream = forwardRef<VideoStreamRef, VideoStreamProps>(
   }
 );
 
-VideoStream.displayName
+VideoStream.displayName = 'VideoStream';
