@@ -14,16 +14,20 @@ import path from 'path';
 
 const DB_FILE = path.resolve(process.cwd(), 'db.json');
 
-function readDb() {
+function readDb(): { cameras: Camera[] } {
     try {
         if (fs.existsSync(DB_FILE)) {
             const data = fs.readFileSync(DB_FILE, 'utf-8');
-            return JSON.parse(data);
+            // Handle empty file case
+            if (data) {
+                return JSON.parse(data);
+            }
         }
     } catch (e) {
         console.error("Error reading database file:", e);
     }
-    return { cameras: [] }; // Default structure
+    // Return a default structure if file doesn't exist, is empty, or fails to parse
+    return { cameras: [] }; 
 }
 
 function writeDb(data: any) {
@@ -36,7 +40,8 @@ function writeDb(data: any) {
 
 
 export function getCameras(): Camera[] {
-    return readDb().cameras || [];
+    const db = readDb();
+    return db.cameras || [];
 }
 
 // This function is crucial for keeping the server-side "DB"

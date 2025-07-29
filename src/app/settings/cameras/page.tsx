@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Plus, Edit, Trash2, Camera as CameraIcon, ArrowLeft, History, Bell, Info } from 'lucide-react';
 import type { Camera } from '@/lib/types';
-import { getCameras, saveCameras as saveCamerasToLocalStorage } from '@/lib/storage'; // Note: using client-side storage for UI
+import { getCameras as getCamerasFromLocalStorage, saveCameras as saveCamerasToLocalStorage } from '@/lib/storage'; // Note: using client-side storage for UI
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
@@ -49,10 +49,14 @@ export default function CamerasSettingsPage() {
     const [apiUrl, setApiUrl] = useState('');
 
     useEffect(() => {
-        // Load initial cameras from localStorage for quick UI, but the server is the source of truth.
-        setCameras(getCameras());
+        // Load initial cameras from localStorage for quick UI.
+        // The server-side db.json is the ultimate source of truth,
+        // but this makes the UI feel faster.
+        setCameras(getCamerasFromLocalStorage());
         // Construct the API URL on the client-side
-        setApiUrl(`${window.location.origin}/api/cameras`);
+        if (typeof window !== 'undefined') {
+          setApiUrl(`${window.location.origin}/api/cameras`);
+        }
     }, []);
 
     const handleLogout = () => {

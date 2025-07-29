@@ -22,7 +22,8 @@ export const VideoStream = forwardRef<VideoStreamRef, VideoStreamProps>(
     const [hlsUrl, setHlsUrl] = useState('');
 
     useEffect(() => {
-        // Construct the HLS stream URL using environment variables for configuration.
+        // Construct the HLS stream URL using environment variables.
+        // These are set in the .env file and exposed to the client by Next.js.
         const streamHost = process.env.NEXT_PUBLIC_STREAMING_HOST || `http://localhost`;
         const streamPort = process.env.NEXT_PUBLIC_STREAMING_PORT || '8080';
         const constructedUrl = `${streamHost}:${streamPort}/${camera.id}/stream.m3u8`;
